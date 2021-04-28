@@ -21,7 +21,7 @@ published: false # 公開設定（falseにすると下書き）
 ```
 
 # Neologdのインストール
-Neologdは、比較的に新しい言葉も含んだ辞書で、NLPのチームの同僚におすすめされました！
+Neologdは、比較的に新しい言葉も含んだ辞書で、NLPをやっているチームの同僚におすすめされました！
 今回は、この辞書の導入方法も紹介します。
 ``` bash
 !git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
