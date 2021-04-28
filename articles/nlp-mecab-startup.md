@@ -1,5 +1,5 @@
 ---
-title: "NLPのはじめの一歩！Mecab+Nelogdのインストール・使用方法" # 記事のタイトル
+title: "NLPのはじめの一歩！Mecab+Neologdのインストール・使用方法" # 記事のタイトル
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["機械学習"] # タグ。["markdown", "rust", "aws"]のように指定する
@@ -10,7 +10,7 @@ published: false # 公開設定（falseにすると下書き）
 普段は画像処理を行っている私ですが、本日、初めてNLPのプログラムを書きました。その際、Mecabの使用から躓いてしまったので、メモを残したいと思います。
 
 以下、Google Colabで試して動いた方法を紹介します！
-Nelogdは、比較的に新しい言葉も含んだ辞書で、NLPのチームの同僚におすすめされました！
+
 
 # Mecabのインストール
 
@@ -21,6 +21,8 @@ Nelogdは、比較的に新しい言葉も含んだ辞書で、NLPのチーム�
 ```
 
 # Neologdのインストール
+Neologdは、比較的に新しい言葉も含んだ辞書で、NLPのチームの同僚におすすめされました！
+今回は、この辞書の導入方法も紹介します。
 ``` bash
 !git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
 !./mecab-ipadic-neologd/bin/install-mecab-ipadic-neologd -n -a -y
