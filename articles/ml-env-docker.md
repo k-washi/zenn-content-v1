@@ -3,10 +3,10 @@ title: "DockerによるGPU機械学習・Jupyter Notebook 環境作成方法の�
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["Docker", "機械学習"] # タグ。["markdown", "rust", "aws"]のように指定する
-published: false # 公開設定（falseにすると下書き）
+published: true # 公開設定（falseにすると下書き）
 ---
 
-機械学習の実験環境をチームの人と共有したいなど、開発では多々あると思います。  
+機械学習の実験環境をチームの人と共有したいということは、多々あると思います。  
 その際に、バージョンの問題が発生したりして実験環境が再現できないということは、できるだけ避けたいものです。
 
 このようなことを避けるため、Dockerを用いることは、必須と言えるでしょう！  
@@ -16,6 +16,7 @@ published: false # 公開設定（falseにすると下書き）
 # 環境作成
 
 Dockerによる機械学習環境の作成方法の一例を示します。  
+以下のことができれば、必要最低限の環境になると思います。
 - Jupyter notebookを使用できること
 - Pythonのライブラリを管理できること
 - GPUが使用できること
@@ -59,8 +60,8 @@ if 'PASSWORD' in os.environ:
   del os.environ['PASSWORD']
 ```
 
-Dockerfileは、以下の通りです。これも作りたい環境に合わせて適宜変更してください。　　
-多分、installしているライブラリは、ぐちゃぐちゃです。
+Dockerfileは、以下の通りです。これも作りたい環境に合わせて適宜変更してください。  
+多分、インストールしているライブラリは、ぐちゃぐちゃです。
 
 ```docker:Dockerfile
 FROM nvidia/cuda:11.1.1-devel-ubuntu20.04
