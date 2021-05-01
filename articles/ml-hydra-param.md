@@ -3,7 +3,7 @@ title: "Hydraを用いたPython・機械学習のパラメータ設定方法" # 
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["python", "機械学習"] # タグ。["markdown", "rust", "aws"]のように指定する
-published: false # 公開設定（falseにすると下書き）
+published: true # 公開設定（falseにすると下書き）
 ---
 
 Pythonで設定ファイルを書く方法は、多くあります。以前は、.envファイルに書いたりしていましたが、最近は、Hydraというライブラリを用いてパラメータを管理しています。実際、機械学習のプロダクトで、Hydraを使用して、実験から、プロダクトの管理までを行っており、とても便利です。
