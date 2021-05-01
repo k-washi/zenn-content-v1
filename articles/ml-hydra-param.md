@@ -6,8 +6,9 @@ topics: ["python", "機械学習"] # タグ。["markdown", "rust", "aws"]のよ�
 published: false # 公開設定（falseにすると下書き）
 ---
 
-Pythonで設定ファイルを書く方法は、多くあります。以前は、.envファイルに書いたりしていましたが、最近は、Hydraというライブラリを用いてパラメータを管理しています。
-実際、機械学習のプロダクトで、Hydraを使用して、実験から、プロダクトの管理までを行っています。本記事では、Hydraの簡単な使用方法を解説します！
+Pythonで設定ファイルを書く方法は、多くあります。以前は、.envファイルに書いたりしていましたが、最近は、Hydraというライブラリを用いてパラメータを管理しています。実際、機械学習のプロダクトで、Hydraを使用して、実験から、プロダクトの管理までを行っており、とても便利です。
+
+本記事では、Hydraの簡単な使用方法を解説します！
 
 # インストール
 
@@ -148,6 +149,7 @@ param = Config.get_cnf("./conf")
 
 print(param)
 #{'param': 'paramです！', 'test_param': {'param1': 0, 'param2': 'test0'}}
+
 print(param.test_param)
 #{'param1': 0, 'param2': 'test0'}
 ```
