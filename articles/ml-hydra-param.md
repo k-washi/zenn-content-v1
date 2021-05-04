@@ -106,11 +106,9 @@ class Config():
     hydraによる設定値の取得 (conf)
     """
     @staticmethod
-    def get_cnf(conf_path: str):
+    def get_cnf():
         """
         設定値の辞書を取得
-        @param
-            conf_path: str
         @return
             cnf: OmegaDict
         """
@@ -145,7 +143,7 @@ if module_path not in sys.path:
 
 # 設定を読み込む
 from utils.config import Config
-param = Config.get_cnf("./conf")
+param = Config.get_cnf()
 
 print(param)
 #{'param': 'paramです！', 'test_param': {'param1': 0, 'param2': 'test0'}}
