@@ -9,11 +9,11 @@ published: false # 公開設定（falseにすると下書き）
 こんにちは、鷲崎です。最近、SORACOMのAI カメラ「[SORACOM Plus Camera Basic](https://soracom.jp/soracom_plus/camera_basic/)」というエッジAIが可能なカメラデバイスを楽しんでいます。このカメラは、電源をつなぐだけで、通信が可能になる、エッジAIカメラです。通信部分は、SORACOM Air のセルラー通信がになってくれており、機械学習エンジニアがアルゴリズム開発に集中できるという利点があります。
 
 他にも、以下のような素晴らしい利点があります。
-1. エッジ側で処理が行えるので、画像など重いデータの送信量を減らせる
+1. デバイス側で処理が行えるので、画像など重いデータの送信量を減らせる
 2. プログラムのデプロイがリモートで可能 (SSHでカメラ内に入る必要がない)
-3. エッジから、AWS Lambdaを実行することが可能
+3. デバイスから、AWS Lambdaを実行することが可能
 
-本記事では、このカメラの初期設定から、エッジで撮影した画像をAWS S3に保存するまでの手順を紹介したいと思います。
+本記事では、このカメラの初期設定から、デバイスで撮影した画像をAWS S3に保存するまでの手順を紹介したいと思います。
 
 [【Ask SA!】S+ Camera Basic 入門と AWS サービスとの連携による表情解析とダッシュボード作成](https://blog.soracom.com/ja-jp/2020/06/29/asksa-spluscamera_with_aws/) という公式の記事が出ています。この記事は、AWSとの連携に関する情報として、かなり有益で、本記事の作成時にも参考にしました。
 
@@ -43,75 +43,72 @@ SORACOM Mosaicとはエッジデバイスの管理を遠隔からすることが
 
 1. requirements.txtの作成
 
-[SORACOM Mosaic Python module 一覧](https://users.soracom.io/ja-jp/docs/mosaic/modules/)のモジュールを記載します。
-
-後の処理で、エラーが出たため```tflite-runtime==***```のみコメントアウトしました。
-
-もし、開発に必要なライブラリがあったら、追記、もしくは、別途インストールをしてください。
+   [SORACOM Mosaic Python module 一覧](https://users.soracom.io/ja-jp/docs/mosaic/modules/)のモジュールを記載します。
+   後の処理で、エラーが出たため```tflite-runtime==***```のみコメントアウトしました。もし、開発に必要なライブラリがあったら、追記、もしくは、別途インストールをしてください。
 
 2. Dockerfileによる環境構築
 
-下記のDockerfileを作成します。ここで、上記のようにコメントアウトしたtfliteを別途インストールしていることに注意してください。
+   下記のDockerfileを作成します。ここで、上記のようにコメントアウトしたtfliteを別途インストールしていることに注意してください。
 
 
-```dockerfile: Dockerfile
-FROM ubuntu:18.04
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -y && apt-get install -y build-essential vim \
-    wget curl git zip gcc cmake make openssl \
-    libssl-dev libbz2-dev libreadline-dev \
-    libsqlite3-dev python3-tk tk-dev python-tk \
-    libfreetype6-dev libffi-dev liblzma-dev -y jq sudo
+   ```dockerfile: Dockerfile
+   FROM ubuntu:18.04
+   ENV DEBIAN_FRONTEND=noninteractive
+   RUN apt-get update -y && apt-get install -y build-essential vim \
+      wget curl git zip gcc cmake make openssl \
+      libssl-dev libbz2-dev libreadline-dev \
+      libsqlite3-dev python3-tk tk-dev python-tk \
+      libfreetype6-dev libffi-dev liblzma-dev -y jq sudo
 
-RUN git clone https://github.com/yyuu/pyenv.git /root/.pyenv
-ENV HOME  /root
-ENV PYENV_ROOT $HOME/.pyenv
-ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
-RUN pyenv --version
-RUN pyenv install 3.7.3
-RUN pyenv local 3.7.3
-RUN python --version
-RUN pyenv rehash
+   RUN git clone https://github.com/yyuu/pyenv.git /root/.pyenv
+   ENV HOME  /root
+   ENV PYENV_ROOT $HOME/.pyenv
+   ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
+   RUN pyenv --version
+   RUN pyenv install 3.7.3
+   RUN pyenv local 3.7.3
+   RUN python --version
+   RUN pyenv rehash
 
-# このディレクトリに作成することが重要
-RUN sudo mkdir -p /opt/soracom/python/
-RUN chown -R $(whoami) /opt/soracom/
-RUN python -m venv /opt/soracom/python/
+   # このディレクトリに作成することが重要
+   RUN sudo mkdir -p /opt/soracom/python/
+   RUN chown -R $(whoami) /opt/soracom/
+   RUN python -m venv /opt/soracom/python/
 
-# pyenvの環境を構築
-RUN pip install --upgrade pip
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+   # pyenvの環境を構築
+   RUN pip install --upgrade pip
+   COPY requirements.txt .
+   RUN pip install -r requirements.txt
 
-# tfliteは別途ダウンロードした
-RUN pip3 install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_x86_64.whl
+   # tfliteは別途ダウンロードした
+   RUN pip3 install https://dl.google.com/coral/python/tflite_runtime-2.1.0.post1-cp37-cp37m-linux_x86_64.whl
 
-# SORACOM CLIのダウンロード
-RUN wget https://github.com/soracom/soracom-cli/releases/download/v0.6.2/soracom_0.6.2_linux_amd64.tar.gz
-RUN tar xvf ./soracom_0.6.2_linux_amd64.tar.gz
-RUN cp ./soracom_0.6.2_linux_amd64/soracom /usr/local/bin/
+   # SORACOM CLIのダウンロード
+   RUN wget https://github.com/soracom/soracom-cli/releases/download/v0.6.2/soracom_0.6.2_linux_amd64.tar.gz
+   RUN tar xvf ./soracom_0.6.2_linux_amd64.tar.gz
+   RUN cp ./soracom_0.6.2_linux_amd64/soracom /usr/local/bin/
 
-WORKDIR /workspace
-```
+   WORKDIR /workspace
+   ```
 
-docker-compose.ymlファイルも作成します。
+   docker-compose.ymlファイルも作成します。
 
-```yaml: docker-compose.yml
-version: '2.3'
+   ```yaml: docker-compose.yml
+   version: '2.3'
 
-services:
-  ai-camera-dev:
-    build: .
-    container_name: ai-camera-dev
-    image: ai-camera-dev
-    command: /bin/sh -c "while :; do sleep 10; done"
-    volumes: 
-      - $PWD:/workspace
-    ports:
-      - 18071-18080:18071-18080
-```
+   services:
+   ai-camera-dev:
+      build: .
+      container_name: ai-camera-dev
+      image: ai-camera-dev
+      command: /bin/sh -c "while :; do sleep 10; done"
+      volumes: 
+         - $PWD:/workspace
+      ports:
+         - 18071-18080:18071-18080
+   ```
 
-```docker-compose up -d``` コマンドでDockerを用いた開発環境構築は終了です。
+   ```docker-compose up -d``` コマンドでDockerを用いた開発環境構築は終了です。
 
 # 4. Dockerコンテナ内で開発環境を設定
 
@@ -121,23 +118,21 @@ VScodeのリモートエクスプローラから、開発用コンテナを選�
 1. 実行したいPython開発環境を設定  
    ```source /opt/soracom/python/bin/activate``` で、ライブラリをインストールしたPython開発環境を設定できます。
 
-2. SORACOM cli の設定  
+2. SORACOM CLI の設定  
    [SORACOM CLI をインストールし SIM カードの一覧を取得する](https://users.soracom.io/ja-jp/tools/cli/getting-started/) の記事を参考にしつつ、SORACOM CLIを設定します。 記事中のステップ1は、Dockerで環境構築時に行っているので、ステップ2より行います。
 
-   認証情報の設定
+   まず、認証情報の設定します。
    ```bash
    LANG=ja soracom configure
    ```
 
-   確認のため、SIMカードの一覧を取得する
+   次に、確認のため、SIMカードの一覧を取得します。
    ```bash
    soracom subscribers list
    ```
 
 3. SORACOM Mosaicのデプロイツールを取得  
-   ローカルで開発したプログラムをデバイスにデプロイする必要があり、そのツールが準備されています。　　
-
-   [ここ](https://drive.google.com/file/d/12kSdp0ksraM4bUCR5avHYu_Xoes8VnFx/edit)から、デプロイツールをダウンロードしてください。そして、以下のコマンドが動作するか確認します。
+   ローカルで開発したプログラムをデバイスにデプロイする必要があり、そのツールが準備されています。[ここ](https://drive.google.com/file/d/12kSdp0ksraM4bUCR5avHYu_Xoes8VnFx/edit)から、デプロイツールをダウンロードしてください。そして、以下のコマンドが動作するか確認します。
 
    ```bash
    jq
@@ -264,7 +259,7 @@ s3への画像送信方法は、[【Ask SA!】S+ Camera Basic 入門と AWS サ�
 
    AWS Lambdaにおいて、Presigned URLを発行するコードは以下になります。最近、AWS LambdaがDockerに対応していたので、[AWS Lambdaがコンテナイメージをサポートしたので、Detectron2 を使って画像認識(Object Detection)を行うAPI を作る](https://qiita.com/gorogoroyasu/items/2039273e7c04365f3da8)という記事を参考にしつつ、Docker in AWS Lambdaで動作確認しました。
 
-   ```
+   ```python
    import boto3
 
    _expire_time = 600 #10min
@@ -300,35 +295,35 @@ s3への画像送信方法は、[【Ask SA!】S+ Camera Basic 入門と AWS サ�
    
    ```python
    def upload_s3(url_data, image):
-   """
-   画像をs3にアップロードする
-   url_data: presiendurlの取得結果
-   image: rgb img
-   """
-   # convert to jpg
-   if image is None:
-      raise ValueError("Upload s3 can not convert img")
+      """
+      画像をs3にアップロードする
+      url_data: presiendurlの取得結果
+      image: rgb img
+      """
+      # convert to jpg
+      if image is None:
+         raise ValueError("Upload s3 can not convert img")
 
-   # 画像をエンコード
-   encode_param = [cv2.IMWRITE_JPEG_QUALITY, UPLOAD_QUALITY]
-   _, im_data = cv2.imencode('.jpg', image, encode_param)
-   im_data_byte = im_data.tobytes()
-   files = {'file': im_data_byte}
+      # 画像をエンコード
+      encode_param = [cv2.IMWRITE_JPEG_QUALITY, UPLOAD_QUALITY]
+      _, im_data = cv2.imencode('.jpg', image, encode_param)
+      im_data_byte = im_data.tobytes()
+      files = {'file': im_data_byte}
 
-   # 送信する情報をまとめる
-   if "url" in url_data and "fields" in url_data:
-      url = url_data["url"]
-      fields = url_data["fields"]
-   else:
-      raise ValueError("url and fields not included in Presigned url")
-   
-   # s3に送信
-   try:
-      res= requests.post(url, data=fields, files=files)
-      logger.debug(res.text)
-   except Exception as e:
-      raise ValueError(f"Upload s3 post fail {e}")
-   return True
+      # 送信する情報をまとめる
+      if "url" in url_data and "fields" in url_data:
+         url = url_data["url"]
+         fields = url_data["fields"]
+      else:
+         raise ValueError("url and fields not included in Presigned url")
+      
+      # s3に送信
+      try:
+         res= requests.post(url, data=fields, files=files)
+         logger.debug(res.text)
+      except Exception as e:
+         raise ValueError(f"Upload s3 post fail {e}")
+      return True
    ```
 
 
