@@ -1,5 +1,5 @@
 ---
-title: "【論文読み】Decision Transformer: ReinforcementLearning via Sequence Modeling の解説" # 記事のタイトル
+title: "【論文読み】Decision Transformerの解説" # 記事のタイトル
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["機械学習"] # タグ。["markdown", "rust", "aws"]のように指定する
