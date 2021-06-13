@@ -6,20 +6,24 @@ topics: ["機械学習"] # タグ。["markdown", "rust", "aws"]のように指�
 published: false # 公開設定（falseにすると下書き）
 ---
 
-こんにちは、鷲崎です。先日(21年6月６日)、「○○ is Not All You Need」系の論文の系譜である[Tabular Data: Deep Learning is Not All You Need](https://arxiv.org/abs/2106.03253)が出ていました。この論文では、表形式のデータにおいて、XGBoostの精度が深層ニューラルネットワークを上回ることが分かったと主張されていました。確かに、KaggleでもXGBoostは頻繁に使用されますし、チューニングの必要性がないことも嬉しいとこです。
+こんにちは、鷲崎です。先日(21年6月６日)、「○○ is Not All You Need」系の論文の系譜である[Tabular Data: Deep Learning is Not All You Need](https://arxiv.org/abs/2106.03253)という研究が発表されました。この論文では、表形式のデータにおいて、XGBoostの精度が深層ニューラルネットワークを上回ることが分かったと主張されていました。確かに、KaggleでもXGBoostは頻繁に使用されますし、チューニングの必要性がないことも嬉しいとこです。
 
-しかし、この2日前(21年6月4日)に、表形式のデータで、競争力ある新たな深層学習アーキテクチャである、[Self-Attention Between Datapoints: Going Beyond Individual Input-Output Pairs in Deep Learning](https://arxiv.org/abs/2106.02584)が発表されました。下図(論文中Table 1)は、[UCIベンチマーク](http://archive.ics.uci.edu/ml/index.php)にて左から2値分類、多クラス分類、回帰の各タスクで性能を比較したものです。論文にて提案されているNon-Parametric Transformers (NPTs)は、Boosting系の手法と比較しても同等以上の結果を示しています。
+しかし、この2日前(21年6月4日)に、表形式のデータで、競争力ある新たな深層学習アーキテクチャである、[Self-Attention Between Datapoints: Going Beyond Individual Input-Output Pairs in Deep Learning](https://arxiv.org/abs/2106.02584)という研究が発表されていました。下図(論文中Table 1)は、[UCIベンチマーク](http://archive.ics.uci.edu/ml/index.php)を用いて、左から2値分類、多クラス分類、回帰のタスクで性能を比較したものです。論文にて提案されているNon-Parametric Transformers (NPTs)は、Boosting系の手法と比較しても同等以上の結果を示しています。
 
 
-![](https://storage.googleapis.com/zenn-user-upload/36fa10ff0670b2b5388f5ee2.png)
+![npt eval](https://storage.googleapis.com/zenn-user-upload/36fa10ff0670b2b5388f5ee2.png)
 
 本記事では、この深層学習において新しい考え方であるSelf-Attention Between Datapointsを解説します。
 
 # 何が新しいのか??
 
-下図(論文中Figure 1)が、提案手法(NPTs)の概要です。入力データ(a)は、属性とデータ点からなります。例えば、属性は、性別、所属などの特徴に関する軸で、データ点は文章1, 文章2などデータごとの軸です。
+下図(論文中Figure 1)が、提案手法(NPTs)の概要です。
 
-(b)は、学習や予測に使用するデータに関して表しており、Features($X_i$)は、あるデータ点において、特徴量です。Target($X_{i,j}^M)は、予測したい、あるデータ点のある特徴のことです。Entry(X_{i,j}^O$)はデータ全体のなかのある点のことです。
+![](https://storage.googleapis.com/zenn-user-upload/e92297f2092121422d352d1f.png)
+
+入力データ(a)は、属性とデータ点からなります。例えば、属性は、性別、所属などの特徴に関する軸で、データ点は文章1, 文章2などデータごとの軸です。
+
+(b)は、学習や予測に使用するデータに関して表しており、Features($X_i$)は、あるデータ点において、特徴量です。Target($X_{i,j}^M$)は、予測したい、あるデータ点のある特徴のことです。Entry($X_{i,j}^O$)はデータ全体のなかのある点のことです。
 
 (c), (d)は、それぞれ、パラメトリックなモデルと、論文で提案しているNPTsを表現しています。
 
@@ -27,7 +31,7 @@ published: false # 公開設定（falseにすると下書き）
 
 論文で提案されているNPTは、予測時に同じデータ点だけでなく、データ全体(学習データも含む)を使用しています。これは、とても柔軟性のあるモデルが必要で、データ点間の相互作用を明示的に学習して予測を行う手法になっています。また、このように学習データに依存して予測を行うモデルは、ノンパラメトリックなモデルと呼ばているため、Non-Parametric Transformersと名付けられています。
 
-![](https://storage.googleapis.com/zenn-user-upload/e92297f2092121422d352d1f.png)
+
 
 では、NPTsは、今までのノンパラメトリックな手法と、どのように異なるのでしょうか？ ガウス過程などの従来のノンパラメトリックな手法は、入力データ間の相互作用がアーキテクチャの選択とハイパーパラメータによって完全に決定されてしまうという、データに対する柔軟性の制限があります。また、深層ニューラルネットワークを用いた手法も、NPTと比較して、確率過程に大きく依存しており、柔軟性に欠け、データに強い過程が必要になります。
 
