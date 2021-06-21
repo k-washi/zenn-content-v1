@@ -6,7 +6,7 @@ topics: ["機械学習"] # タグ。["markdown", "rust", "aws"]のように指�
 published: True # 公開設定（falseにすると下書き）
 ---
 
-こんにちは、わっしーこと鷲崎です。
+こんにちは、わっしーです。
 機械学習関連の記事を分散して書きすぎたので、まとめます。
 
 - [twitter: @kwashizzz](https://twitter.com/kwashizzz)  
