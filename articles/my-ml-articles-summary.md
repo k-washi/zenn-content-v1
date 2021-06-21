@@ -36,7 +36,7 @@ published: True # 公開設定（falseにすると下書き）
 
 最近できた新しい分野であるNeural Radiance Fields(NeRF)において、動的な物体にも対応した[Neural Scene Flow Fields (NSFF)](https://www.cs.cornell.edu/~zl548/NSFF/)に関する記事。下図が試した結果。実際には、カメラを動かしながら撮った動画だが、NSFFを学習することで、ある時刻のある視点からの画像を表現できている。この出力のために学習に4日ほどかかった。
 
-![](https://lh3.googleusercontent.com/ofZSgKJw5rCOrDcyfUdY6KoUuOCmwduFLiN8hVrkKQmbkQdaiZ0X59xyBStjYGsE3tk6V9uM-Ryvj4j3TOPp0aSWGFmd5Mo9poZvu3W-GwIwRrN92QD7ehE3gHFcPMDUuqViVmmrbA=w600)
+![](https://lh3.googleusercontent.com/ofZSgKJw5rCOrDcyfUdY6KoUuOCmwduFLiN8hVrkKQmbkQdaiZ0X59xyBStjYGsE3tk6V9uM-Ryvj4j3TOPp0aSWGFmd5Mo9poZvu3W-GwIwRrN92QD7ehE3gHFcPMDUuqViVmmrbA=w600 =400x)
 
 
 ---
@@ -47,7 +47,7 @@ published: True # 公開設定（falseにすると下書き）
 [（株）Fusic](https://fusic.co.jp/)では、スポーツxAIに力を入れていて、その一環で調査した論文 [SiamMOT](https://www.amazon.science/publications/siammot-siamese-multi-object-tracking)に関する記事。2021年5月末に発表されたstate-of-the-artなリアルタイムMOTの手法となる。実際にサッカーの試合動画に試し、精度が良さそうだった。
 
 
-![](https://lh3.googleusercontent.com/BIr_cx6zoBeTg76kZBPzvMYPbBDQeY3FEl7uVHP5QyqZIH43bx6_QWXLMpxKqblKUfkAOZDJoWFve_3oTlqa2zcaqb9u47-bgsb2V3bUwyZjyDk3RghPcZ6m5JP3w9jrtL4IAfW1Xg=s0)
+![](https://lh3.googleusercontent.com/BIr_cx6zoBeTg76kZBPzvMYPbBDQeY3FEl7uVHP5QyqZIH43bx6_QWXLMpxKqblKUfkAOZDJoWFve_3oTlqa2zcaqb9u47-bgsb2V3bUwyZjyDk3RghPcZ6m5JP3w9jrtL4IAfW1Xg=s0 =400x)
 
 ---
 
@@ -95,7 +95,7 @@ Involutionという、新しい演算手法を提案した[論文](https://arxiv
 
 案件で、画像同士の特徴マッチングに関して調査していて面白かった[SuperGlue](https://arxiv.org/abs/1911.11763)のまとめ記事。特徴抽出は、SuperPointなどで行い、その後のマッチングにAttentionを導入して精度向上している。下の図が実際に試した結果。
 
-![](https://storage.googleapis.com/zenn-user-upload/ddd45b0eecd6a10bb90f6ee0.png)
+![](https://storage.googleapis.com/zenn-user-upload/ddd45b0eecd6a10bb90f6ee0.png =600x)
 
 ---
 
@@ -104,4 +104,4 @@ Involutionという、新しい演算手法を提案した[論文](https://arxiv
 
 CVPR2020で個人的に面白かった 写真のイラスト化に関する論文 [Learning to Cartoonize Using White-box Cartoon Representations](https://systemerrorwang.github.io/White-box-Cartoonization/paper/06791.pdf)に関する記事。損失関数の設計が、イラスト化とは?ということを明確に定義して設計されていた。下の図が試した結果。
 
-![](https://storage.googleapis.com/zenn-user-upload/493e0bd97b9efb20ac1c50f4.jpg)
+![](https://storage.googleapis.com/zenn-user-upload/493e0bd97b9efb20ac1c50f4.jpg =400x)
