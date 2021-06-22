@@ -20,7 +20,7 @@ published: True # 公開設定（falseにすると下書き）
 
 CVPR2021で注目されているGANに関する[論文](https://arxiv.org/abs/2106.06561)です。1枚の画像をデータ拡張した画像を一つのバッチとすることで、コンテンツ情報は変化し、スタイル情報は一定という学習ができ、多様なスタイル変換を可能にしている。
 
-![](https://doc-0k-24-docs.googleusercontent.com/docs/securesc/e0mdeokirve22dss6llf5vrden82l7ne/2sofm3re3u5fqnjv05ec3pf2j7n08lv1/1624321275000/12395582200715279290/12395582200715279290/14Lzn15yiUQyo5UCJ0wGur3JzCfkDrkVb?e=view&authuser=0 =400x)
+![](https://drive.google.com/uc?export=view&id=14Lzn15yiUQyo5UCJ0wGur3JzCfkDrkVb =400x)
 
 ---
 
