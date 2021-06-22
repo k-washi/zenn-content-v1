@@ -16,6 +16,14 @@ published: True # 公開設定（falseにすると下書き）
 
 # 2021年
 
+## [GANs N' Roses: Stable, Controllable, Diverse Image to Image Translation の解説！](https://tech.fusic.co.jp/posts/2021-06-20-ml-gans-n-roses/)
+
+CVPR2021で注目されているGANに関する[論文](https://arxiv.org/abs/2106.06561)です。1枚の画像をデータ拡張した画像を一つのバッチとすることで、コンテンツ情報は変化し、スタイル情報は一定という学習ができ、多様なスタイル変換を可能にしている。
+
+![](https://doc-0k-24-docs.googleusercontent.com/docs/securesc/e0mdeokirve22dss6llf5vrden82l7ne/2sofm3re3u5fqnjv05ec3pf2j7n08lv1/1624321275000/12395582200715279290/12395582200715279290/14Lzn15yiUQyo5UCJ0wGur3JzCfkDrkVb?e=view&authuser=0 =400x)
+
+---
+
 ## [【論文解説】Self-Attention Between Datapoints - ノンパラメトリック深層モデル Non-Parametric Transformers の解説](https://tech.fusic.co.jp/posts/2021-06-13-ml-npts-between-datapoints/)
 
 21年6月６日、「○○ is Not All You Need」系の論文の系譜である「Tabular Data: Deep Learning is Not All You Need](https://arxiv.org/abs/2106.03253)という研究が発表された。この研究では、表形式のデータにおいて、XGBoostの精度が深層ニューラルネットワークを上回ることが分かったと主張されていた。
