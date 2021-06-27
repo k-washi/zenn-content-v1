@@ -18,7 +18,7 @@ published: True # 公開設定（falseにすると下書き）
 
 ## [GANs N' Roses: Stable, Controllable, Diverse Image to Image Translation の解説！](https://tech.fusic.co.jp/posts/2021-06-20-ml-gans-n-roses/)
 
-CVPR2021で注目されているGANに関する[論文](https://arxiv.org/abs/2106.06561)です。1枚の画像をデータ拡張した画像を一つのバッチとすることで、コンテンツ情報は変化し、スタイル情報は一定という学習ができ、多様なスタイル変換を可能にしている。
+GANで多様なスタイル変換を行う[論文](https://arxiv.org/abs/2106.06561)です。1枚の画像をデータ拡張した画像を一つのバッチとすることで、コンテンツ情報は変化し、スタイル情報は一定という学習ができ、多様なスタイル変換を可能にしている。
 
 ![](https://drive.google.com/uc?export=view&id=14Lzn15yiUQyo5UCJ0wGur3JzCfkDrkVb =400x)
 
