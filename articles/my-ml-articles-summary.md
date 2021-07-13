@@ -16,6 +16,12 @@ published: True # 公開設定（falseにすると下書き）
 
 # 2021年
 
+## [人の顔を入れ替えてみた！最新の顔すり替え手法 SimSwapの解説！](https://tech.fusic.co.jp/posts/2021-07-13-ml-sim-swap/)
+
+従来の顔すり替え技術では、対象の顔を目的の顔にすり替えるためにチューニングする必要があったり、すり替え対象の顔における表情や視線などの属性をすり替え後に保持できていないなどの課題がありました。そこで、[SimSwap: An Efficient Framework For High Fidelity Face Swapping](https://arxiv.org/abs/2106.06340)という論文では、Simple Swap (SimSwap)と呼ばれる効率的で、任意の顔の属性を保持したまま、目的の顔にすり替えるフレームワークが提案していました。
+
+---
+
 ## [GANs N' Roses: Stable, Controllable, Diverse Image to Image Translation の解説！](https://tech.fusic.co.jp/posts/2021-06-20-ml-gans-n-roses/)
 
 GANで多様なスタイル変換を行う[論文](https://arxiv.org/abs/2106.06561)です。1枚の画像をデータ拡張した画像を一つのバッチとすることで、コンテンツ情報は変化し、スタイル情報は一定という学習ができ、多様なスタイル変換を可能にしている。
