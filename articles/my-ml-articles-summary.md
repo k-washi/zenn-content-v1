@@ -16,6 +16,11 @@ published: True # 公開設定（falseにすると下書き）
 
 # 2021年
 
+## [顔編集で表情や年齢を変えてみた！Pivotal Tuning for Latent-based Editing of Real Imagesの解説](https://tech.fusic.co.jp/posts/2021-08-02-ml-pivotal-tuning/)
+
+顔の向きや表情、年齢などの属性を変更する最新の顔編集技術である、Pivotal Tuning for Latent-based Editing of Real Imagesについて解説しています。Pivotal Tuningは、学習済みの生成器を入力データに対してわずかにチューニングする技術で、メイクが濃い顔やメガネをかけた人など、学習データにあまり含まれていないような画像に対しても納得感のある顔編集を可能にします。
+---
+
 ## [人の顔を入れ替えてみた！最新の顔すり替え手法 SimSwapの解説！](https://tech.fusic.co.jp/posts/2021-07-13-ml-sim-swap/)
 
 従来の顔すり替え技術では、対象の顔を目的の顔にすり替えるためにチューニングする必要があったり、すり替え対象の顔における表情や視線などの属性をすり替え後に保持できていないなどの課題がありました。そこで、[SimSwap: An Efficient Framework For High Fidelity Face Swapping](https://arxiv.org/abs/2106.06340)という論文では、Simple Swap (SimSwap)と呼ばれる効率的で、任意の顔の属性を保持したまま、目的の顔にすり替えるフレームワークが提案していました。
