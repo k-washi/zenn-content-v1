@@ -2,7 +2,7 @@
 title: "CCC2021 まとめ" # 記事のタイトル
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "idea" # tech: 技術記事 / idea: アイデア記事
-topics: ["機械学習"] # タグ。["markdown", "rust", "aws"]のように指定する
+topics: ["ml"] # タグ。["markdown", "rust", "aws"]のように指定する
 published: False # 公開設定（falseにすると下書き）
 ---
 
