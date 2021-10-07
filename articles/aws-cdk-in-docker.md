@@ -3,7 +3,7 @@ title: "AWS CDKをDocker環境で使用する (Python)" # 記事のタイトル
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["ml", "python"] # タグ。["markdown", "rust", "aws"]のように指定する
-published: false # 公開設定（falseにすると下書き）
+published: true # 公開設定（falseにすると下書き）
 ---
 
 こんにちは！鷲崎([@kwashizzz](https://twitter.com/kwashizzz))です。
@@ -35,7 +35,7 @@ AWSのサービスをデプロイするため、適切な権限を与えたク�
 # .aws/config
 [default]
 region=ap-northeast-1
-output=jso
+output=json
 ```
 
 ```
@@ -216,7 +216,7 @@ cdk deploy --all
 デフォルトでは、`app/app.py`が実行されます。しかし、他のファイルの実行によりデプロイしたい場合もあると思います。その時は、以下のようにして、ファイルを指定すれば良いです。ファイルの指定というよりは、デプロイ時に実行するコマンドになります。
 
 ```
-cdk deploy --all "python other_file.py --stage dev"
+cdk deploy --app "python other_file.py --stage dev"
 ```
 
 
