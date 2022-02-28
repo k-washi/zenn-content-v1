@@ -1,5 +1,5 @@
 ---
-title: "Spacy/GiNZAの形態素解析処理 Sudachiの設定ファイルを変更する方法" # 記事のタイトル
+title: "spaCy/GiNZAの形態素解析処理 Sudachiの設定ファイルを変更する方法" # 記事のタイトル
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["機械学習", "nlp"] # タグ。["markdown", "rust", "aws"]のように指定する
@@ -26,7 +26,7 @@ Sudachi関連のデフォルトの設定ファイルや必要なリソースは�
 
 この`sudachi.json`設定ファイルをユーザA専用とし、[Sudachiにユーザ定義辞書を追加する方法](https://zenn.dev/kwashizzz/articles/nlp-sudachi-user-dic)の記事のように、ユーザ定義辞書のパスを追記します。
 
-この設定ファイルを読み込んだSudachiを形態素解析器として、Spacy/GiNZAで解析を行う方法を紹介します。
+この設定ファイルを読み込んだSudachiを形態素解析器として、spaCy/GiNZAで解析を行う方法を紹介します。
 
 #　初期設定
 
@@ -136,7 +136,7 @@ for sent in doc.sents:
 7 。 補助記号-句点
 ```
 
-以上、Spacy/GiNZAで、ユーザ定義辞書の設定ファイルに変更する方法でした。
+以上、spaCy/GiNZAで、ユーザ定義辞書の設定ファイルに変更する方法でした。
 
 
 

@@ -1,12 +1,12 @@
 ---
-title: "Spacy/GiNZAの形態素解析処理 Sudachiにユーザ定義辞書を追加する方法" # 記事のタイトル
+title: "spaCy/GiNZAの形態素解析処理 Sudachiにユーザ定義辞書を追加する方法" # 記事のタイトル
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["機械学習", "nlp"] # タグ。["markdown", "rust", "aws"]のように指定する
 published: true # 公開設定（falseにすると下書き）
 ---
 
-GiNZAの形態素解析のライブラリとして、Sudachiが使用されています。そのため、Spacy/GiNZAの解析にユーザ定義辞書を追加したい場合は、Sudachiにユーザ定義辞書を追加する必要があります。
+GiNZAの形態素解析のライブラリとして、Sudachiが使用されています。そのため、spaCy/GiNZAの解析にユーザ定義辞書を追加したい場合は、Sudachiにユーザ定義辞書を追加する必要があります。
 
 ここでは、Sudachiにユーザ定義辞書を追加する方法を解説します。
 
