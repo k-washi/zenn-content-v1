@@ -34,7 +34,6 @@ published: false # 公開設定（falseにすると下書き）
 
 4. VOSは画像検出・物体検出のモデルの分類部分を一部拡張するだけで使用でき、特徴抽出部分を修正する必要がないため、事前学習済みのモデルが使用できます。
 
-物体検出バージョンは、画像分類の単純な拡張なため、本記事では、画像分類メインで説明します。
 
 # 外れ値の合成手法
 
@@ -73,5 +72,50 @@ $$
 $$
 \begin{equation}
 f(v; \theta) = W_{cls}^T v \tag{4}
+\end{equation}
+$$
+
+次に、上記の方法で仮想的な外れ値を合成できるとし、どのような損失で学習するのか解説します。
+
+# VOSの損失
+
+論文では、IDに対しては低いOODスコアを、合成された外れ値に対しては、高いOODスコアを生成するように、モデルを正則化しながら学習する損失を提案しています。
+
+物体検出バージョンは、画像分類の単純な拡張なため、簡単のため、画像分類メインで説明します。
+
+## 分類のための不確かさ正則化
+
+理想的には、データ密度$\log p(x)$を捉える何らかの関数により、IDとOODデータ間の分離境界を最適化する損失を設定する必要があります。
+しかし、$\log p(x)$を直接推定することは、空間$X$全体からサンプリングする必要があるため、計算上困難です。そこで、Energy-based Out-of-distribution Detection](https://arxiv.org/abs/2010.03759)で言及されているログ分配関数を用いることが考えられます。
+
+ログ分配関数は、自由エネルギーとも呼ばれ、OOD検出のための有効な不確かさ測定であることが示されています。ラベル$y$に対応するロジット出力を$f_y (x; \theta)$とした時、$p(y | x) = \frac{p(x, y)}{p(x)} = \frac{e^{f_y (x; \theta)}}{\sum_{k=1}^{K} e^{f_k (x; \theta)}}$ となり、$\log p(x)$に比例するらしいです。
+
+VOSでは、合成された外れ値に対して正のエネルギーを持ち、IDデータに対して負のエネルギー値を持つ、エネルギー関数に基づく不確かさ損失を定義しています。
+
+$\mathcal{L}_{uncertainty} = \mathbb{E}_{v \sim V} \mathbb{1} \{ E(v; \theta) > 0 \} + \mathbb{E}_{x \sim D} \mathbb{1} \{ E(x; \theta) \leq 0 \}$
+
+これは、密度を推定するよりもシンプルな損失ですが、0/1損失の設計は困難なため、以下の式のように、滑らかに近似したバイナリシグモイド損失に置き換えた損失をVOSでは使用しています。
+
+$$
+\begin{equation}
+\mathcal{L}_{uncertainty} = \mathbb{E}_{v \sim V} [ -\log \frac{1}{1 + \exp^{- \theta_u E(v; \theta)}} ] + \mathbb{E}_{x \sim D} [ -\log \frac{\exp^{- \theta_u E(x; \theta)}}{1 + \exp^{- \theta_u E(x; \theta)}} ]   \tag{5}
+\end{equation}
+$$
+
+今までのアプローチと比較し、上記の不確かさ損失は、ハイパーパラメータフリーで使用が容易で、かつ、OOD検出時には、シグモイド関数により、確率的スコアを生成することができます。
+
+もし、物体検出に使用する場合は、バウンディングボックスも入力として、以下の式で表されます。
+
+$$
+\begin{equation}
+E(x, b; \theta) = - \log \sum_{k=1}^K w_k \cdot e^{f_k(x, b;\theta)}  \tag{6}
+\end{equation}
+$$
+
+そして、VOSでは、物体検出、物体分類の損失と組み合わせ、以下の損失で最適化が行われます。
+
+$$
+\begin{equation}
+min_{\theta} \mathbb{E}_{(x, b, y) \sim D} [ \mathcal{L}_{cls} +  \mathcal{L}_{loc}] + \beta \cdot  \mathcal{L}_{uncertainty}  \tag{7}
 \end{equation}
 $$
