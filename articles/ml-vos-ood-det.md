@@ -79,16 +79,16 @@ $$
 
 # VOSの損失
 
-論文では、IDに対しては低いOODスコアを、合成された外れ値に対しては、高いOODスコアを生成するように、モデルを正則化しながら学習する損失を提案しています。
+論文では、IDに対しては低いOODスコアを、合成された外れ値に対しては、高いOODスコアを生成するように、モデルを正則化しながら学習する損失を提案しています。以下、色々式がありますが、合成した外れ値も入れて、いい感じに学習データと合成データを分離する境界を効率的に学習したいだけだと思います。
 
 物体検出バージョンは、画像分類の単純な拡張なため、簡単のため、画像分類メインで説明します。
 
 ## 分類のための不確かさ正則化
 
 理想的には、データ密度$\log p(x)$を捉える何らかの関数により、IDとOODデータ間の分離境界を最適化する損失を設定する必要があります。
-しかし、$\log p(x)$を直接推定することは、空間$X$全体からサンプリングする必要があるため、計算上困難です。そこで、Energy-based Out-of-distribution Detection](https://arxiv.org/abs/2010.03759)で言及されているログ分配関数を用いることが考えられます。
+しかし、$\log p(x)$を直接推定することは、空間$X$全体からサンプリングする必要があるため、計算上困難です。そこで、Energy-based Out-of-distribution Detection](https://arxiv.org/abs/2010.03759)で言及されているログ分配関数 $E(x; \theta) = - \log \sum_{k=1}^K e^{f_k(x;\theta)}$ を用いることが考えられます。
 
-ログ分配関数は、自由エネルギーとも呼ばれ、OOD検出のための有効な不確かさ測定であることが示されています。ラベル$y$に対応するロジット出力を$f_y (x; \theta)$とした時、$p(y | x) = \frac{p(x, y)}{p(x)} = \frac{e^{f_y (x; \theta)}}{\sum_{k=1}^{K} e^{f_k (x; \theta)}}$ となり、$\log p(x)$に比例するらしいです。
+ログ分配関数は、自由エネルギーとも呼ばれ、OOD検出のための有効な不確かさ測定であることが示されています。ラベル$y$に対応するロジット出力を$f_y (x; \theta)$とした時、$p(y | x) = \frac{p(x, y)}{p(x)} = \frac{e^{f_y (x; \theta)}}{\sum_{k=1}^{K} e^{f_k (x; \theta)}}$ となり、$\log p(x)$に比例するらしいです。つまりデータの密度分布とモデルの出力を関連付けできます。
 
 VOSでは、合成された外れ値に対して正のエネルギーを持ち、IDデータに対して負のエネルギー値を持つ、エネルギー関数に基づく不確かさ損失を定義しています。
 
@@ -119,3 +119,57 @@ $$
 min_{\theta} \mathbb{E}_{(x, b, y) \sim D} [ \mathcal{L}_{cls} +  \mathcal{L}_{loc}] + \beta \cdot  \mathcal{L}_{uncertainty}  \tag{7}
 \end{equation}
 $$
+
+# 推論時
+
+入力画像$x^{\ast}$を入力し、BBox$b^{\ast}$が予測されたとする。OOD不確かさスコアは、
+
+$$
+\begin{equation}
+p_{\theta} (g | x^{\ast}, b^{\ast}) = \frac{\exp^{-\theta_u \cdot E( x^{\ast}, b^{\ast})}}{1 + \exp^{-\theta_u \cdot E( x^{\ast}, b^{\ast})}} \tag{8}
+\end{equation}
+$$
+
+で与えられます。簡単にいうと、出力のログ分配関数を計算し、確率に変換しています。
+
+OOD検出のため、IDとOODを区別する閾値$\gamma$を導入し、例えば95%など、高い割合で設定しています。ここでは、1に近いほど、IDであり、閾値を下回ると、OODとしています。
+
+$$
+\begin{equation}
+
+G(x^{\ast}, b^{\ast}) =  \left\{ \begin{array}{ll} 1 & (p_{\theta} (g | x^{\ast}, b^{\ast}) \geq \gamma) \\ 0 & (p_{\theta} (g | x^{\ast}, b^{\ast}) < \gamma) \end{array} \right. \tag{9}
+
+\end{equation}
+$$
+
+以下、アルゴリズムです。
+
+![](https://storage.googleapis.com/zenn-user-upload/0e387320a6ca-20220303.png)
+
+
+# 実験
+
+実験では、以下のメトリックスで評価していました。
+
+- FPR95 : IDサンプルの真陽性率が95%であると分類器のOODサンプルの偽陽性率
+- AUROC : ROC曲線の面積
+- mAP: 物体検出で良く使用される性能評価指標
+
+FPR95に関して、理解が少し足りないです。
+
+他のOODアプローチと比較して、どの指標も良かったです。また、GANなど外れ値合成手法と比較しても、高性能でした。
+詳細は、[論文](https://openreview.net/forum?id=TW7d65uYu5M)読んでください！
+
+# 実装・実験
+
+論文に記載されている[コード](https://github.com/deeplearning-wisc/vos)の分類におけるOOD検出に関して、事前学習済みモデルを使用して実験してみました。
+
+データセットは、[Kaggle Dogs vs. Cats](https://www.kaggle.com/c/dogs-vs-cats/data) を使用させていただきました。訓練データの1割をテストデータと見なし、単純な分類、VOSを加えた分類の両方とも正解率99%程度でした。また、OOD検出の確認のため、自前の画像に加え、[このリポジトリ](https://github.com/ieee8023/deep-learning-datasets)の犬とベーグル画像の見分け辛い画像を使用させていただきました。
+
+モデルは、事前学習済みモデルとして、timmのresnet50dを使用し、最後から2番目の層の出力を64次元と小さめに設定しました。64次元の理由は、VOSの公式実装で小さめに設定されていたためです。また、実際に、128や512と大きくして試した際、次元が大きすぎて多変量ガウス分布の仮定が満たせないためか、OODの検出が上手くいかなかったです。
+
+## 実験結果
+
+![](https://storage.googleapis.com/zenn-user-upload/3af888905644-20220307.png)
+
+## 実装
