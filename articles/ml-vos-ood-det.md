@@ -369,7 +369,7 @@ output = model(data)
 score = model.log_sum_exp(output, 1) # 学習にも使用した、log_sum_exp
 
 # もし、model.weight_energyがない場合
-#score = - to_np(torch.logsumexp(output, dim=1))
+#score = to_np(torch.logsumexp(output, dim=1))
 
 # 以下、スコアです。これが、閾値以上だったら、ID、それ以下だったらOODとします。
 score = np.exp(to_np(score)) / (1 + np.exp(to_np(score)))
