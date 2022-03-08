@@ -13,8 +13,18 @@ published: True # 公開設定（falseにすると下書き）
 - [wantedly](https://www.wantedly.com/id/kai_washizaki)
 - [zenn](https://zenn.dev/kwashizzz)
 
+# 2022
+
+[VOS: Learning What You Don't Know by Virtual Outlier Synthesis の解説・実装](https://zenn.dev/kwashizzz/articles/ml-vos-ood-det)
+
+OOD(Out-of-distribution)検出でSoTAのVOS(Virtual Outlier Synthesis)を提案した論文の解説記事です。今までの手法は、実際のクラス外のデータが必要で、データ作成にコストがかかったり、そもそも取得不可能場合もありました。しかし、VOSでは、仮想的なクラス外データを効率よく作成し、学習するためクラス外のデータは必要ないため、かなり実用的です。実際に実験を行い、OOD検出の性能の良さに驚きました！
 
 # 2021年
+
+## [Solafuneの市街地画像の超解像化コンペのまぁまぁ高精度な解法](https://zenn.dev/kwashizzz/articles/solafune-sr-swinir)
+
+Solafuneの市街地画像の超解像化コンペにて、SwinIRを用いた手法・実装についてまとめた記事です。
+Solafune Award受賞しました！
 
 ## [顔編集で表情や年齢を変えてみた！Pivotal Tuning for Latent-based Editing of Real Imagesの解説](https://tech.fusic.co.jp/posts/2021-08-02-ml-pivotal-tuning/)  
 
