@@ -39,14 +39,67 @@ published: false # 公開設定（falseにすると下書き）
 
 SimCTGは、最尤推定の損失（クロスエントロピー損失)と対照損失(Constrastive Loss)からなります。
 
-単語列を$x$とした場合、最尤推定の損失は、以下のようになります。一つ前までの単語列($x_{ < i}$)から生成される単語が$x_i$である確率$p_{\theta}(x)$を最大化するような損失$\mathcal{L}_{MLE}$としてます。
+単語列を$x$とした場合、最尤推定の損失は、以下のようになります。一つ前までの単語列($x_{ < i}$)から生成される単語が$x_i$である確率分布 $p_{\theta}(x)$を最大化するような損失$\mathcal{L}_{MLE}$としてます。
 
 $$
 \begin{equation}
-\mathcal{L}_{MLE} = - \frac{1}{|x|} \sum_{i=1}^{|x|} \log p_{\theta} (x_i | $x_{ < i})
+\mathcal{L}_{MLE} = - \frac{1}{|x|} \sum_{i=1}^{|x|} \log p_{\theta} (x_i | x_{ < i})
 \tag{1}
 \end{equation}
 $$
 
+次に対照損失$\mathcal{L}_{CL}$は、類似度関数$s$を用いて、以下の式になります。これは、同じ単語の特徴ベクトルの類似度を高くし、異なる単語の特徴ベクトルの類似度を小さくするような損失です。
 
+$$
+\begin{equation}
 
+\mathcal{L}_{CL} = \frac{1}{|x| \times (|x| - 1)} \sum_{i=1}^{|x|} \sum_{j=1, j \neq i}^{|x|} 
+\max \{ 0, \rho - s(h_{x_i}, h_{x_i}) + s(h_{x_i}, h_{x_j}) \}
+
+\tag{2}
+\end{equation}
+$$
+
+マージン $\rho \in [-1, 1] $はハイパーパラメータで、$h_{x_i}$がトークン($x_i$)の特徴ベクトルです。類似度関数は、
+
+$$
+\begin{equation}
+
+s(h_{x_i}, h_{x_j}) = \frac{h_{x_i}^Th_{x_j}}{||h_{x_i}|| \cdot || h_{x_j} ||}
+
+\tag{3}
+\end{equation}
+$$
+
+で計算できます。
+
+上記の損失を用いてSimCTG損失は、
+
+$$
+\begin{equation}
+
+\mathcal{L}_{CTG} = \mathcal{L}_{MLE} + \mathcal{L}_{CL}
+
+\tag{4}
+\end{equation}
+$$
+
+となります。
+
+このSimCTG損失を用いて学習することで、同じトークンの特徴ベクトルは近くになり、異なるトークン間の特徴ベクトルは遠くなります。
+
+# Contrastive Search
+
+対照損失を用いたSimCTGで学習したモデルを用いて次の単語を予測する場合、一つ前までの単語列とは異なる単語である可能性が高いです。その知識を取り入れ、従来手法と同様に確率の高い単語を探索することに加え、一つ前までの単語列と類似度が低い単語を探索するContrastive Searchが提案されています。
+
+予測確率が高い単語の$k$個の集合$V^k$とした場合のContastive Searchによる単語選択は、
+
+$$
+\begin{equation}
+
+x_t = \mathrm{argmax}_{v \in V^k} \{ (1 - \alpha) \times p_{\theta}(v | x_{ < t}) 
+- \alpha \times (\mathrm{max} \{ s(h_v, h_{x_j}) : 1 \leq j \leq t - 1 \}) \}
+
+\tag{5}
+\end{equation}
+$$
