@@ -15,7 +15,11 @@ published: True # 公開設定（falseにすると下書き）
 
 # 2022
 
-[VOS: Learning What You Don't Know by Virtual Outlier Synthesis の解説・実装](https://zenn.dev/kwashizzz/articles/ml-vos-ood-det)
+## [SimCTG: テキスト生成におけるContrastive学習推論の解説・実装](https://zenn.dev/kwashizzz/articles/ml-simctg-contrastive-framework)
+
+文章生成のモデルの生成テキストの不自然さや、望ましくない単語の繰り返しを抑える手法として、A Contrastive Framework for Neural Text Generationで提案されたSimCTG(a SIMple Contrastive framework for neural Text Generation)を解説した記事です。また、論文の実装コードを参考にし、Encoder-Decoder形式の文章生成モデルであるT5にSimCTGを適用してみたので、実装方法も解説しています。
+
+## [VOS: Learning What You Don't Know by Virtual Outlier Synthesis の解説・実装](https://zenn.dev/kwashizzz/articles/ml-vos-ood-det)
 
 OOD(Out-of-distribution)検出でSoTAのVOS(Virtual Outlier Synthesis)を提案した論文の解説記事です。今までの手法は、実際のクラス外のデータが必要で、データ作成にコストがかかったり、そもそも取得不可能場合もありました。しかし、VOSでは、仮想的なクラス外データを効率よく作成し、学習するためクラス外のデータは必要ないため、かなり実用的です。実際に実験を行い、OOD検出の性能の良さに驚きました！
 
