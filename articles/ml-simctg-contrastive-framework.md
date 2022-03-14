@@ -3,7 +3,7 @@ title: "SimCTG: テキスト生成におけるContrastive学習推論の解説�
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["機械学習", "python"] # タグ。["markdown", "rust", "aws"]のように指定する
-published: false # 公開設定（falseにすると下書き）
+published: true # 公開設定（falseにすると下書き）
 ---
 
 # はじめに
@@ -205,7 +205,7 @@ class T5FineTuner(pl.LightningModule):
 ```
 
 上記の変更を行なったコードで学習した結果、以下の類似度のようになりました。(同様に、長いので最初の5行5列部分のみです。)
-対角成分は、類似度が高く、異なるトークン間の類似度である対角成分以外は、類似度が小さくなっていることがわかります。
+対角成分の類似度が高く、異なるトークン間の類似度である対角成分以外は、類似度が小さくなっていることがわかります。
 
 ```
 [0.9999, 0.2982, -0.5032, -0.3650, -0.5413,
@@ -221,8 +221,11 @@ class T5FineTuner(pl.LightningModule):
 
 
 ```python
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 input_ids = next(iter(data_loader))["source_ids"] # データローダから読み込み
+model = T5ForConditionalGeneration.from_pretrained(T5_MODEL_DIR) # T5_MODEL_DIRに学習したモデルの重みなどが入っていると仮定
+tokenizer = T5Tokenizer.from_pretrained(T5_MODEL_DIR, is_fast=True) # Tokenizer
+
 batch_size, seqlen = input_ids.size()
 
 generated = [[] for _ in range(batch_size)] # バッチごとの生成文格納するリストです。
@@ -237,10 +240,10 @@ beam_width = 3 # 実装では、ビームサーチの結果にContrastive Search
 alpha = 0.5 # (1 - a) * 確率最大 + a * 類似度
 
 input_ids.to(device)
-trained_model.eval()
+model.eval()
 for step in range(decoding_len):
     next_ids, past_key_values, last_hidden_states, logits = ContrastiveDecodingOneStepFast(
-        trained_model,
+        model,
         input_ids,
         beam_width,
         alpha,
@@ -403,8 +406,7 @@ def select_past_key_values(past_key_values, beam_width, selected_idx):
 
 # まとめ
 
-文章生成の改善手法を探していて、偶然見つけた論文ですが、簡単に実装でき、効果が高そうな手法な気がします。
-再現実験までやったわけではありませんが、今後、どんどん使っていきたい手法です。
+文章生成の改善手法を探していて、偶然見つけた論文ですが、簡単に実装でき、効果が高そうな手法な気がします。再現実験までやったわけではありませんが、今後、どんどん使っていきたい手法です。
 
 個人的に、Contrastive Learningは、好きな分野で、画像系ですがSimSiamの記事を書いています。今後も、この分野には着目していきたいですね。
 
