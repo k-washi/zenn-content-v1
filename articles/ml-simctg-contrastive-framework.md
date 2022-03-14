@@ -12,11 +12,11 @@ published: false # 公開設定（falseにすると下書き）
 画像・自然言語・音声に関する機械学習の研究開発やMLOpsを行っています。もし、機械学習に関して、ご相談があれば、[@kwashizzz](https://twitter.com/kwashizzz)のアカウントまでDMしてください！
 これまでの、[機械学習記事のまとめ](https://zenn.dev/kwashizzz/articles/my-ml-articles-summary)です。
 
-本記事では、文章生成のモデルの欠点である生成テキストの不自然さや、望ましくない単語の繰り返しを抑える手法として、[A Contrastive Framework for Neural Text Generation](https://arxiv.org/abs/2202.06417)で提案されたSimCTG(a **SIM**ple **C**ontrastive framework for neural **T**ext **G**eneration)を紹介します。
+本記事では、文章生成のモデルの生成テキストの不自然さや、望ましくない単語の繰り返しを抑える手法として、[A Contrastive Framework for Neural Text Generation](https://arxiv.org/abs/2202.06417)で提案されたSimCTG(a **SIM**ple **C**ontrastive framework for neural **T**ext **G**eneration)を紹介します。
 
 また、[論文の実装コード](https://github.com/yxuansu/SimCTG/tree/bb54480e5c43d62d5b660d5cdabaee7c7d7af442)を参考にし、Encoder-Decoder形式の文章生成モデルであるT5にSimCTGを適用してみたので、実装方法を紹介します。
 
-※ [論文の実装コード](https://github.com/yxuansu/SimCTG/tree/bb54480e5c43d62d5b660d5cdabaee7c7d7af442)には、GPT-2に適用した実装があるので、GPT-2を使いたい人は、[こちら]((https://github.com/yxuansu/SimCTG/tree/bb54480e5c43d62d5b660d5cdabaee7c7d7af442)を参考にしてください。
+※ [論文の実装コード](https://github.com/yxuansu/SimCTG/tree/bb54480e5c43d62d5b660d5cdabaee7c7d7af442)には、GPT-2に適用した実装があるので、GPT-2を使いたい人は、[こちら](https://github.com/yxuansu/SimCTG/tree/bb54480e5c43d62d5b660d5cdabaee7c7d7af442)を参考にしてください。
 
 # なぜSimCTGが必要なのか?
 
@@ -25,21 +25,21 @@ published: false # 公開設定（falseにすると下書き）
 参考: [テキスト生成における decoding テクニック: Greedy search, Beam search, Top-K, Top-p
 ](https://zenn.dev/hellorusk/articles/1c0bef15057b1d)
 
-しかし、これらの探索手法を用いた場合、同じ単語を繰り返すなどの問題が発生します。そこで、`huggingface`の文章の`generete`関数では、`no_repeat_ngram_size`や`repetition_penalty`という引数があり、このパラメータによって繰り返しを抑えることができますが、パラメータによっては、同じ単語列が出なくなり不自然な生成になってしまうことがあります。
+しかし、これらの探索手法を用いた場合、同じ単語を繰り返すなどの問題が発生します。そこで、`huggingface`の文章生成関数`generete`では、`no_repeat_ngram_size`や`repetition_penalty`という引数があり、このパラメータによって繰り返しを抑えることができますが、パラメータによっては、同じ単語列が全く出なくなり不自然な生成になってしまうことがあります。
 
-下図(論文中Fig.1)の(a)は、GPT-2によって生成された各トークンにおける特徴ベクトル(Transformer最終層)のコサイン類似度行列です。見ての通り、文中のトークン間の類似度が0.95以上になっており、互いの特徴ベクトルが近いことがわかります。当然ですが、これは、異なるステップで繰り返しトークンを生成してしまう原因となります。論文中では、このように特徴ベクトルが偏っていることを異方性と言っています。
+下図(論文中Fig.1)の(a)は、GPT-2によって生成された各トークンにおける特徴ベクトル(Transformer最終層)のコサイン類似度行列です。見ての通り、文中のトークン間の類似度が0.95以上になっており、互いの特徴ベクトルが近いことがわかります。これは、異なるステップで繰り返しトークンを生成してしまう原因の一つと考えられます。論文中では、このように特徴ベクトルが偏っていることを異方性と言っています。
 
 ![Fig.1](https://storage.googleapis.com/zenn-user-upload/c51f3beef16d-20220313.png)
 
-理想的には、生成されたトークンの特徴ベクトル間を識別可能にするため、上図(b)のようにトークン間の類似度が低くなるようにすべきです。つまり、各トークンの特徴ベクトルは偏らないようにする必要があります。（等方性にすべき。）
+理想的には、生成されたトークンの特徴ベクトル間を識別可能にするため、上図(b)のようにトークン間の類似度が低くなるようにすべきと考えられます。つまり、各トークンの特徴ベクトルは偏らないようにする必要があります。（等方性にすべき。）
 
-そこで、最尤推定（MLE）で言語モデルを学習し、最も可能性の高いシーケンスをデコードしていくという従来手法に対し、識別可能で等方的な特徴ベクトルの学習を促すSimCTG損失を提案し、加えて、SimCTGによる学習を補完する新しい復号化手法であるContrastive Search (対照探索)を提案した。
+そこで、最尤推定（MLE）で言語モデルを学習し最も可能性の高いシーケンスをデコードしていくという従来手法に対して、識別可能で等方的な特徴ベクトルの学習を促すSimCTG損失を提案し、加えて、SimCTGによる学習を補完する新しい復号化手法であるContrastive Search (対照探索)が提案されています。
 
 # SimCTG
 
 SimCTGは、最尤推定の損失（クロスエントロピー損失)と対照損失(Constrastive Loss)からなります。
 
-単語列を$x$とした場合、最尤推定の損失は、以下のようになります。一つ前までの単語列($x_{ < i}$)から生成される単語が$x_i$である確率分布 $p_{\theta}(x)$を最大化するような損失$\mathcal{L}_{MLE}$としてます。
+単語列を$x$とした場合、最尤推定の損失は、以下のようになります。一つ前までの単語列($x_{ < i}$)から生成される単語が$x_i$である確率分布 $p_{\theta}(x)$を最大化するような損失$\mathcal{L}_{MLE}$です。
 
 $$
 \begin{equation}
@@ -92,7 +92,7 @@ $$
 
 対照損失を用いたSimCTGで学習したモデルを用いて次の単語を予測する場合、一つ前までの単語列とは異なる単語である可能性が高いです。その知識を取り入れ、従来手法と同様に確率の高い単語を探索することに加え、一つ前までの単語列と類似度が低い単語を探索するContrastive Searchが提案されています。
 
-予測確率が高い単語の$k$個の集合$V^k$とした場合のContastive Searchによる単語選択は、
+予測確率が高い$k$個の単語集合を$V^k$とした場合のContastive Searchによる単語選択は、
 
 $$
 \begin{equation}
@@ -108,14 +108,13 @@ $$
 
 # 結果
 
-論文のTable.1を見てください。SimCTGに、Contrastive Searchを使った際、最強です。一方、両方使う必要があるとも見て取れます。
+論文のTable.1を見てください。論文通りの結果だと、SimCTGに、Contrastive Searchを使った際、最強です。一方、両手法を使う必要があるとも見て取れます。
 
 # T5におけるSimCTGの学習の実装
 
-今回は、[【日本語モデル付き】2021年に自然言語処理をする人にお勧めしたい事前学習済みモデル](https://qiita.com/sonoisa/items/a9af64ff641f0bbfed44)で提供されているT5の転移学習例の[コード](https://github.com/sonoisa/t5-japanese)をベースに修正しました。[コード](https://github.com/sonoisa/t5-japanese)のニュース記事のタイトル生成（一種の文章要約）のリンクからGoogle Colabでの訓練コードが見れます。
-また、本記事では、簡単のため、修正したSimCTGの重要な部分のみ記載します。
+今回は、[【日本語モデル付き】2021年に自然言語処理をする人にお勧めしたい事前学習済みモデル](https://qiita.com/sonoisa/items/a9af64ff641f0bbfed44)で提供されているT5の転移学習例の[コード](https://github.com/sonoisa/t5-japanese)をベースに拡張させていただきました。[コード](https://github.com/sonoisa/t5-japanese)のニュース記事のタイトル生成（一種の文章要約）のリンクからGoogle Colabでの訓練コードが見れます。また、本記事では、簡単のため、修正したSimCTGの重要な部分のみ記載します。
 
-まず、類似度計算の部分です。ここでは、T5のデコーダの最終層を特徴ベクトルとして使用しています。バッチ, 単語列数, 特徴ベクトルからなる行列なので、各単語ごとの特徴ベクトルの類似度を計算し、バッチ、単語列数、単語列数の類似度行列を出力します。
+まず、類似度計算の部分です。ここでは、T5のデコーダの最終層を特徴ベクトルとして使用しています。バッチ, 単語列数, 特徴ベクトルからなる行列なので、各単語ごとの特徴ベクトルの類似度を計算し、バッチx単語列数x単語列数の類似度行列を出力します。
 
 ```python
 def t5_cosine_simirality(outputs):
