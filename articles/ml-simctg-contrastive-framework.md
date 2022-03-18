@@ -222,7 +222,9 @@ class T5FineTuner(pl.LightningModule):
 
 ```python
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-input_ids = next(iter(data_loader))["source_ids"] # データローダから読み込み
+data = next(iter(data_loader)) # データローダから読み込み
+input_ids = data["source_ids"] 
+input_mask = data["source_mask"]
 model = T5ForConditionalGeneration.from_pretrained(T5_MODEL_DIR) # T5_MODEL_DIRに学習したモデルの重みなどが入っていると仮定
 tokenizer = T5Tokenizer.from_pretrained(T5_MODEL_DIR, is_fast=True) # Tokenizer
 
@@ -245,6 +247,7 @@ for step in range(decoding_len):
     next_ids, past_key_values, last_hidden_states, logits = ContrastiveDecodingOneStepFast(
         model,
         input_ids,
+        input_mask,
         beam_width,
         alpha,
         past_key_values,
@@ -272,6 +275,7 @@ for step in range(decoding_len):
 def ContrastiveDecodingOneStepFast(
     model, 
     ids, 
+    attention_mask,
     beam_width, 
     alpha, 
     past_key_values,
@@ -292,6 +296,7 @@ def ContrastiveDecodingOneStepFast(
             decoder_inputs = torch.tensor([[0] for _ in range(bsz)]).to(device) # pad_token_idでstart
             output = model(
                 input_ids=ids, 
+                attention_mask=attention_mask,
                 decoder_input_ids=decoder_inputs,
                 past_key_values=past_key_values,
                 use_cache=True,
@@ -317,7 +322,8 @@ def ContrastiveDecodingOneStepFast(
     input_ids = top_k_ids.view(-1, 1).to(device) # [B*K , 1]
     with torch.no_grad():
         output = model(
-            input_ids=input_ids, 
+            input_ids=ids, 
+            attention_mask=attention_mask,
             decoder_input_ids=input_ids,
             past_key_values=past_key_values,
             output_hidden_states=True,
