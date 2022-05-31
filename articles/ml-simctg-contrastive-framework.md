@@ -218,7 +218,7 @@ class T5FineTuner(pl.LightningModule):
 
 # T5におけるContrastive Searchの実装
 
-まず、推論の大まかな流れです。論文の実装で重要な部分は、前の単語列から次の単語を予測する`ContrastiveDecodingOneStepFast`という関数ですが、githubに記載されている関数で推論すると、推論速度が遅いため、huggingfaceのgenerateメソッドに合わせた形式で作成した、`T5SimCTGGenerate`クラスを実装しています。
+まず、推論の大まかな流れです。論文の実装で重要な部分は、前の単語列から次の単語を予測する`ContrastiveDecodingOneStepFast`という関数ですが、githubに記載されている関数で推論すると推論速度が遅いため、huggingfaceのgenerateメソッドに合わせた形式で作成した、`T5SimCTGGenerate`クラスを実装しています。
 
 
 ```python
