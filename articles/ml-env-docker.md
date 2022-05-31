@@ -121,7 +121,7 @@ services:
 tensorboard --logdir <logpath> --port 18085 --host=0.0.0.0
 ```
 
-以上がファイル構成です。docker-compose.yalがあるディレクトリで、
+以上がファイル構成です。docker-compose.ymlがあるディレクトリで、
 ```
 docker-compose up -d
 ```
