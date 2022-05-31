@@ -18,6 +18,10 @@ published: true # 公開設定（falseにすると下書き）
 
 ※ [論文の実装コード](https://github.com/yxuansu/SimCTG/tree/bb54480e5c43d62d5b660d5cdabaee7c7d7af442)には、GPT-2に適用した実装があるので、GPT-2を使いたい人は、[こちら](https://github.com/yxuansu/SimCTG/tree/bb54480e5c43d62d5b660d5cdabaee7c7d7af442)を参考にしてください。
 
+---
+
+22/5/31 - 推論処理をhugging faceのgenerateメソッドlikeの処理に修正しました。(推論速度が改善しています。)
+
 # なぜSimCTGが必要なのか?
 
 > 昨今のDecoderを持つモデルでは、入力文＋過去に生成した単語列から次の単語列を予測するAuto-Regressiveな生成が行われています。この際に、計算量の関係から、Gready SearchやBeam Searchなどが用いられています。
