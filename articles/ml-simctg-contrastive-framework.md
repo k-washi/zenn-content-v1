@@ -223,15 +223,6 @@ class T5FineTuner(pl.LightningModule):
 
 ```python
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-<<<<<<< HEAD
-=======
-data = next(iter(data_loader)) # データローダから読み込み
-input_ids = data["source_ids"] 
-input_mask = data["source_mask"]
-model = T5ForConditionalGeneration.from_pretrained(T5_MODEL_DIR) # T5_MODEL_DIRに学習したモデルの重みなどが入っていると仮定
-tokenizer = T5Tokenizer.from_pretrained(T5_MODEL_DIR, is_fast=True) # Tokenizer
->>>>>>> bd6d5ebcf4145ee5258a1f3b6b394dd2bc737b72
-
 
 decoding_len = 512 # 文章の最大長さ
 beam_width = 3 # 実装では、ビームサーチの結果にContrastive Searchを行なっていた。
@@ -242,10 +233,7 @@ text_list = [
     "text1 ......"
 ]
 
-<<<<<<< HEAD
-output = model(text_list)
-print(output)
-=======
+
 input_ids.to(device)
 model.eval()
 for step in range(decoding_len):
@@ -271,14 +259,12 @@ for step in range(decoding_len):
             is_eos[idx] = True
             continue
         generated[idx].append(t)
->>>>>>> bd6d5ebcf4145ee5258a1f3b6b394dd2bc737b72
 ```
 
 次に、`T5SimCTGGenerate`の実装です。エンコーダの推論結果を保持したまま、それと一つ前のデコーダの出力を利用して、デコーダによる推論を行っています。また、GPU使用していた際に、メモリーエラーになっていたので、その対処を入れています。[論文実装はこの部分](https://github.com/yxuansu/SimCTG/blob/bb54480e5c43d62d5b660d5cdabaee7c7d7af442/document_generation/utlis.py#L126)になります。
 
 
 ```python
-<<<<<<< HEAD
 class T5SimCTGGenerate:
     def __init__(self, model_dir, gpu_id=0, max_length=512, num_beams=3, simctg_alpha=0.5):
         self.is_cuda = torch.cuda.is_available()
@@ -452,64 +438,7 @@ class T5SimCTGGenerate:
         text = text.lower() # 本当は、テキストの正規化が必要
         text_token = self.tokenizer.batch_encode_plus(
             [text], max_length=self.max_length, truncation=True, padding="max_length", return_tensors="pt"
-=======
-def ContrastiveDecodingOneStepFast(
-    model, 
-    ids, 
-    attention_mask,
-    beam_width, 
-    alpha, 
-    past_key_values,
-    last_hidden_states,
-    vocab,
-    logit_for_next_step,
-    device,
-    first_step=False,
-    
-    ):
-    # input_ids: [B, S]
-    model.eval()
-    if first_step:
-        # T5では、最初のステップのみpad tokenをデコーダの入力とする。
-        with torch.no_grad():
-            bsz, _ = ids.size()
-            ids = ids.to(device)
-            decoder_inputs = torch.tensor([[0] for _ in range(bsz)]).to(device) # pad_token_idでstart
-            output = model(
-                input_ids=ids, 
-                attention_mask=attention_mask,
-                decoder_input_ids=decoder_inputs,
-                past_key_values=past_key_values,
-                use_cache=True,
-                output_hidden_states=True
-            )
-            del decoder_inputs
-        past_key_values = output.past_key_values
-        last_hidden_states = output.decoder_hidden_states[-1].cpu()    # [B, S, E]
-        logit_for_next_step = output.logits[:, -1, :].cpu()    # [B, V]
-    bsz, seqlen, embed_dim = last_hidden_states.size()
-    p = random.uniform(0, 1)
 
-    next_probs = F.softmax(logit_for_next_step, dim=-1)
-
-    # 最大確率のk候補を取得
-    _, top_k_ids = torch.topk(logit_for_next_step, dim=-1, k=beam_width) # [B, V:38000くらい] -> [B, K:beam_width]
-    top_k_probs = torch.gather(next_probs, dim=1, index=top_k_ids) # 候補の確率を取得 [B, K] 
-    
-    # モデルの入力のpast_keyをバッチx候補のタプルに修正
-    past_key_values = enlarge_past_key_values(past_key_values, beam_width)
-
-    # 次の単語を予測
-    input_ids = top_k_ids.view(-1, 1).to(device) # [B*K , 1]
-    with torch.no_grad():
-        output = model(
-            input_ids=ids, 
-            attention_mask=attention_mask,
-            decoder_input_ids=input_ids,
-            past_key_values=past_key_values,
-            output_hidden_states=True,
-            use_cache=True,
->>>>>>> bd6d5ebcf4145ee5258a1f3b6b394dd2bc737b72
         )
         return text_token
 
