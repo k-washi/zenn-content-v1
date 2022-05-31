@@ -108,7 +108,8 @@ $$
 
 # 結果
 
-論文のTable.1を見てください。論文通りの結果だと、SimCTGに、Contrastive Searchを使った際、最強です。一方、両手法を使う必要があるとも見て取れます。
+論文のTable.1を見てください。論文通りの結果だと、SimCTGに、Contrastive Searchを使った際、最強です。
+個人的に使用して見たところ、普通の学習により作成したT5のモデルと比較し、logitsのTop1と2に開きがありました。
 
 # T5におけるSimCTGの学習の実装
 
@@ -217,160 +218,220 @@ class T5FineTuner(pl.LightningModule):
 
 # T5におけるContrastive Searchの実装
 
-まず、推論の大まかな流れです。重要な部分は、前の単語列から次の単語を予測する`ContrastiveDecodingOneStepFast`という関数で、後で解説します。
+まず、推論の大まかな流れです。論文の実装で重要な部分は、前の単語列から次の単語を予測する`ContrastiveDecodingOneStepFast`という関数ですが、githubに記載されている関数で推論すると、推論速度が遅いため、huggingfaceのgenerateメソッドに合わせた形式で作成した、`T5SimCTGGenerate`クラスを実装しています。
 
 
 ```python
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-input_ids = next(iter(data_loader))["source_ids"] # データローダから読み込み
-model = T5ForConditionalGeneration.from_pretrained(T5_MODEL_DIR) # T5_MODEL_DIRに学習したモデルの重みなどが入っていると仮定
-tokenizer = T5Tokenizer.from_pretrained(T5_MODEL_DIR, is_fast=True) # Tokenizer
 
-batch_size, seqlen = input_ids.size()
-
-generated = [[] for _ in range(batch_size)] # バッチごとの生成文格納するリストです。
-is_eos = [False for _ in range(batch_size)] # バッチごとの文章生成終了(EOS)判定リストです。
-# past_key_valuesをモデルの入力とすることで、モデルの入力を一つ前の単語のみにできる(huggingfaceの実装のドキュメント見てください。)
-past_key_values = None 
-last_hidden_states = None
-logits = None
 
 decoding_len = 512 # 文章の最大長さ
 beam_width = 3 # 実装では、ビームサーチの結果にContrastive Searchを行なっていた。
 alpha = 0.5 # (1 - a) * 確率最大 + a * 類似度
+model = T5SimCTGGenerate(T5_MODEL_DIR, max_length=decoding_len, num_beams=beam_width, simctg_alpha=alpha) # T5_MODEL_DIRに学習したモデルの重みなどが入っていると仮定
 
-input_ids.to(device)
-model.eval()
-for step in range(decoding_len):
-    next_ids, past_key_values, last_hidden_states, logits = ContrastiveDecodingOneStepFast(
-        model,
-        input_ids,
-        beam_width,
-        alpha,
-        past_key_values,
-        last_hidden_states,
-        tokenizer,
-        logits,
-        device,
-        first_step=step == 0, #最初のステップのみ扱い違う
-    )
-    tokens = next_ids.squeeze(dim=-1).tolist()
-    for idx, t in enumerate(tokens): #バッチ数分
-        # EOSの場合スキップ
-        if is_eos[idx]:
-            continue
-        if t == tokenizer.eos_token_id:
-            is_eos[idx] = True
-            continue
-        generated[idx].append(t)
+text_list = [
+    "text1 ......"
+]
+
+output = model(text_list)
+print(output)
 ```
 
-次に、`ContrastiveDecodingOneStepFast`の実装です。論文の実装は、GPT-2版ですが、T5はエンコーダ・デコーダモデルなので、デコーダの入力が必要になります。また、GPU使用していた際に、メモリーエラーになっていたので、その対処を入れています。[論文実装はこの部分](https://github.com/yxuansu/SimCTG/blob/bb54480e5c43d62d5b660d5cdabaee7c7d7af442/document_generation/utlis.py#L126)になります。ほとんど論文の実装と同じです。
+次に、`T5SimCTGGenerate`の実装です。エンコーダの推論結果を保持したまま、それと一つ前のデコーダの出力を利用して、デコーダによる推論を行っています。また、GPU使用していた際に、メモリーエラーになっていたので、その対処を入れています。[論文実装はこの部分](https://github.com/yxuansu/SimCTG/blob/bb54480e5c43d62d5b660d5cdabaee7c7d7af442/document_generation/utlis.py#L126)になります。
 
 
 ```python
-def ContrastiveDecodingOneStepFast(
-    model, 
-    ids, 
-    beam_width, 
-    alpha, 
-    past_key_values,
-    last_hidden_states,
-    vocab,
-    logit_for_next_step,
-    device,
-    first_step=False,
+class T5SimCTGGenerate:
+    def __init__(self, model_dir, gpu_id=0, max_length=512, num_beams=3, simctg_alpha=0.5):
+        self.is_cuda = torch.cuda.is_available()
+        if gpu_id > -1:
+            self.device = torch.device(f'cuda:{gpu_id}') if self.is_cuda else torch.device('cpu')
+        else:
+            self.device = torch.device('cpu')
+        
+        self.max_length = max_length
+        self.num_beams = num_beams
+        self.simctg_alpha = simctg_alpha
+        
+        # トークナイザーとモデルの読み込み
+        self.tokenizer = T5Tokenizer.from_pretrained(model_dir, is_fast=True)
+        self.model = T5ForConditionalGeneration.from_pretrained(model_dir)
+        for param in self.model.parameters():
+            param.grad = None
+        self.model.to(self.device)
+        self.model.eval()
+
+        self.eos_token_tensor = torch.as_tensor(self.tokenizer.eos_token_id, dtype=torch.long, device=self.device)
+
+    def __call__(self, text_list):
+        """
+        テキストのリストをバッチ化+トクナイザーによるエンコード後、T5による推論を行い、結果をトークナイザーでデコードする。
+        """
+        batch_input_ids, batch_attention_mask = self.__create_batch(text_list) # バッチ化+エンコード
+        generated = self.forward(batch_input_ids, batch_attention_mask) # t5の推論
+        return [self.tokenizer.decode(t, skip_special_tokens=True, clean_up_tokenization_spaces=False) for t in generated]
     
-    ):
-    # input_ids: [B, S]
-    model.eval()
-    if first_step:
-        # T5では、最初のステップのみpad tokenをデコーダの入力とする。
-        with torch.no_grad():
-            bsz, _ = ids.size()
-            ids = ids.to(device)
-            decoder_inputs = torch.tensor([[0] for _ in range(bsz)]).to(device) # pad_token_idでstart
-            output = model(
-                input_ids=ids, 
-                decoder_input_ids=decoder_inputs,
-                past_key_values=past_key_values,
-                use_cache=True,
-                output_hidden_states=True
-            )
-            del decoder_inputs
-        past_key_values = output.past_key_values
-        last_hidden_states = output.decoder_hidden_states[-1].cpu()    # [B, S, E]
-        logit_for_next_step = output.logits[:, -1, :].cpu()    # [B, V]
-    bsz, seqlen, embed_dim = last_hidden_states.size()
-    p = random.uniform(0, 1)
+    @torch.no_grad()
+    def forward(self, batch_input_ids, batch_attention_mask):
+        self.model.eval()
+        batch_size, _ = batch_input_ids.size()
 
-    next_probs = F.softmax(logit_for_next_step, dim=-1)
+        no_pad_length = 1
+        for bid in range(batch_size):
+            _no_pad_length = torch.sum(batch_input_ids[bid] != self.tokenizer.pad_token_id).item()
+            no_pad_length = max(no_pad_length, _no_pad_length)
+        
+        # 生成結果を保存する配列
+        generated = torch.zeros((batch_size, self.max_length), device=self.device, dtype=torch.long) #[[] for _ in range(batch_size)] # バッチごとの生成文格納するリストです。
+        is_eos = [False for _ in range(batch_size)] # バッチごとの文章生成終了(EOS)判定リストです。
 
-    # 最大確率のk候補を取得
-    _, top_k_ids = torch.topk(logit_for_next_step, dim=-1, k=beam_width) # [B, V:38000くらい] -> [B, K:beam_width]
-    top_k_probs = torch.gather(next_probs, dim=1, index=top_k_ids) # 候補の確率を取得 [B, K] 
+        past_key_values = None
+        last_hidden_states = None
+        logits = None
+
+        batch_input_ids = batch_input_ids.to(self.device)
+        batch_attention_mask = batch_attention_mask.to(self.device)
+
+        selected_batch_indexes = torch.LongTensor([bs for bs in range(batch_size)]).to(self.device)
+        _selected_idx = torch.zeros((batch_size), dtype=torch.long).to(self.device)
+        _next_ids = torch.zeros((batch_size), dtype=torch.long).to(self.device)
+        
+        model_kwargs = {}
+        model_kwargs["use_cache"] = True
+
+        _kewargs = ['decoder_input_ids', 'past_key_values', 'head_mask', 'decoder_head_mask', 'cross_attn_head_mask']
+        for _kewarg in _kewargs:
+            model_kwargs[_kewarg] = None
+            
+            
+        # エンコーダの事前計算
+        # 2. prepare encoder args and encoder kwargs from model kwargs
+        irrelevant_prefix = ["decoder_", "cross_attn", "use_cache"]
+        encoder_kwargs = {
+            argument: value
+            for argument, value in model_kwargs.items()
+            if not any(argument.startswith(p) for p in irrelevant_prefix)
+        }
+        encoder_kwargs["return_dict"] = True
+        encoder_kwargs["input_ids"] = batch_input_ids
+        encoder_kwargs["attention_mask"] = batch_attention_mask
+        model_kwargs["encoder_outputs"] = self.model.encoder(**encoder_kwargs)
+        
+        # デコーダによる処理部分
+        for _, step in enumerate(range(self.max_length)):
+            if step == 0:
+                # T5では、最初のステップのみpad tokenをデコーダの入力とする。
+                with torch.no_grad():
+                    decoder_inputs = torch.as_tensor([[self.tokenizer.pad_token_id] for _ in range(batch_size)], device=self.device) # pad_token_idで埋めた配列が最初の入力となる
+                    model_kwargs["attention_mask"] = self.model._prepare_attention_mask_for_generation(    
+                        batch_input_ids, self.tokenizer.pad_token_id, self.tokenizer.eos_token_id
+                    )
+                    # モデルの入力形成は、huggingfaceのT5実装のものを使用
+                    model_inputs = self.model.prepare_inputs_for_generation(decoder_inputs, **model_kwargs)
+                    output = self.model(
+                        **model_inputs, 
+                        output_hidden_states=True,
+                        output_attentions=False,
+                        return_dict=True
+                    )
+                    last_hidden_states = output.decoder_hidden_states[-1] #.cpu()    # [B, S, E]
+                    # バッチ数 => バッチ数xビーム数に変更
+                    model_kwargs["past"] = enlarge_past_key_values( output.past_key_values, self.num_beams)
+                    logit_for_next_step = output.logits[:, -1, :] #.cpu()    # [B, V]
+                    expanded_return_idx = (
+                        torch.arange(decoder_inputs.shape[0]).view(-1, 1).repeat(1, self.num_beams).view(-1).to(decoder_inputs.device)
+                    )
+                    model_kwargs["attention_mask"] = model_kwargs["attention_mask"].index_select(0, expanded_return_idx)
+                    model_kwargs["encoder_outputs"]["last_hidden_state"] = model_kwargs["encoder_outputs"].last_hidden_state.index_select(
+                        0, expanded_return_idx.to(model_kwargs["encoder_outputs"].last_hidden_state.device)
+                    )
+                    
+                    
+            _, seqlen, embed_dim = last_hidden_states.size() #.cpu()    # [B, S, E]
+
+            next_probs = F.softmax(logit_for_next_step, dim=-1)
+
+            # 最大確率のk候補を取得
+            _, top_k_ids = torch.topk(logit_for_next_step, dim=-1, k=self.num_beams) # [B, V:38000くらい] -> [B, K:beam_width]
+            top_k_probs = torch.gather(next_probs, dim=1, index=top_k_ids) # 候補の確率を取得 [B, K] 
+            
+            # モデルの入力のpast_keyをバッチx候補のタプルに修正
+            model_inputs = self.model.prepare_inputs_for_generation(top_k_ids.contiguous().view(-1, 1), **model_kwargs) 
+
+            # 次の単語を予測
+            with torch.inference_mode():
+                output = self.model(
+                    **model_inputs,
+                    output_hidden_states=True,
+                    return_dict=True
+                )
+                model_kwargs["past"] = output.past_key_values
+                    
+            logits = output.logits[:, -1, :] #.cpu()    # [B*K, V]
+            next_hidden = output.decoder_hidden_states[-1] #.cpu()    # [B*K, 1, E]
+            context_hidden = last_hidden_states.unsqueeze(1).expand(-1, self.num_beams, -1, -1).reshape(batch_size*self.num_beams, seqlen, embed_dim)    # [B*K, S, E]
+
+            # バッチごとの最大スコアの単語を選択
+            # 実際の式の部分を計算 (下の関数)
+            selected_idx = ranking_fast(
+                context_hidden, 
+                next_hidden, 
+                top_k_probs,
+                self.simctg_alpha,
+                self.num_beams,
+            )  # [B]
+            
+            for bs in range(batch_size):
+                _selected_idx[bs] = torch.add(selected_idx[bs], bs * self.num_beams)
+            _next_ids[:] = top_k_ids[selected_batch_indexes, selected_idx] #.unsqueeze(-1)    # [B, 1]
+            next_hidden = next_hidden[_selected_idx, :]
+            last_hidden_states = torch.cat([last_hidden_states, next_hidden], dim=1)    # [B, S, E]
+            logits = logits[_selected_idx, :]
+            logit_for_next_step = logits
+
+            for idx in range(batch_size): #バッチ数分
+                # EOSの場合スキップ
+                if is_eos[idx]:
+                    continue
+                
+                # EOSのチェック
+                if torch.eq(_next_ids[idx], self.eos_token_tensor).all():
+                    is_eos[idx] = True
+                    continue
+                
+                generated[idx, step] = _next_ids[idx]
+            if False not in is_eos:
+                break
+
+        # 不要なものをGPUから除去
+        if self.device != torch.device("cpu"):
+            del batch_input_ids, batch_attention_mask, top_k_ids, top_k_probs, last_hidden_states, past_key_values,  next_probs, _next_ids, _selected_idx, selected_idx, next_hidden, logits, output, context_hidden, model_kwargs
+            torch.cuda.empty_cache()
+        return generated
     
-    # モデルの入力のpast_keyをバッチx候補のタプルに修正
-    past_key_values = enlarge_past_key_values(past_key_values, beam_width)
-
-    # 次の単語を予測
-    input_ids = top_k_ids.view(-1, 1).to(device) # [B*K , 1]
-    with torch.no_grad():
-        output = model(
-            input_ids=input_ids, 
-            decoder_input_ids=input_ids,
-            past_key_values=past_key_values,
-            output_hidden_states=True,
-            use_cache=True,
+    def preprocess(self, text):
+        # テキストの前処理
+        text = text.lower() # 本当は、テキストの正規化が必要
+        text_token = self.tokenizer.batch_encode_plus(
+            [text], max_length=self.max_length, truncation=True, padding="max_length", return_tensors="pt"
         )
-    past_key_values = output.past_key_values
-    logits = output.logits[:, -1, :].cpu()    # [B*K, V]
-    next_hidden = output.decoder_hidden_states[-1].cpu()    # [B*K, 1, E]
-    context_hidden = last_hidden_states.unsqueeze(1).expand(-1, beam_width, -1, -1).reshape(bsz*beam_width, seqlen, embed_dim)    # [B*K, S, E]
+        return text_token
 
-    # バッチごとの最大スコアの単語を選択
-    # 実際の式の部分を計算 (下の関数)
-    selected_idx = ranking_fast(
-        context_hidden, 
-        next_hidden, 
-        top_k_probs,
-        alpha,
-        beam_width,
-    )  # [B]
-
-    # 次のステップの準備
-    next_id = top_k_ids[range(len(top_k_ids)), selected_idx].unsqueeze(-1)    # [B, 1]
-    next_hidden = torch.stack(torch.split(next_hidden.squeeze(dim=1), beam_width))    # [B, K, E]
-    next_hidden = next_hidden[range(bsz), selected_idx, :]    # [B, E]
-    last_hidden_states = torch.cat([last_hidden_states, next_hidden.unsqueeze(1)], dim=1)    # [B, S, E]
-    past_key_values = select_past_key_values(past_key_values, beam_width, selected_idx)
-    logits = torch.stack(torch.split(logits, beam_width))[range(bsz), selected_idx, :]    # [B, V]
-    
-    # GPUのメモリ解放
-    if device != torch.device("cpu"):
-        del model, input_ids, top_k_ids, top_k_probs
-        torch.cuda.empty_cache()
-    return next_id, past_key_values, last_hidden_states, logits 
-
-
-def ranking_fast(context_hidden, next_hidden, next_top_k_probs, alpha, beam_width):
-    '''バッチごとの最大スコアの単語を選択
-        context_hidden: bsz*beam x seqlen x embed_dim
-        next_hidden: bsz*beam x 1 x embed_dim
-        next_top_k_probs: bsz x beam
-    '''
-    _, context_len, embed_dim = context_hidden.size()
-    norm_context_hidden = context_hidden / context_hidden.norm(dim=2, keepdim=True)
-    norm_next_hidden = next_hidden / next_hidden.norm(dim=2, keepdim=True)
-    cosine_matrix = torch.matmul(norm_context_hidden, norm_next_hidden.transpose(1,2)).squeeze(-1)    # [B*K, S]
-    scores, _ = torch.max(cosine_matrix, dim=-1)    # [B*K]
-    next_top_k_probs = next_top_k_probs.view(-1)    # [B*K]
-    # 式の部分
-    scores = (1.0 - alpha) * next_top_k_probs - alpha * scores #
-    scores = torch.stack(torch.split(scores, beam_width)) # バッチごとに戻す [B, K]
-    selected_idx = scores.max(dim=-1)[1] # [B]
-    return selected_idx
-
+    def __create_batch(self, text_list):
+        # バッチの作成
+        batch_input_ids = []
+        batch_attention_mask = []
+        for text in text_list:
+            tokens = self.preprocess(text)
+            input_ids = tokens["input_ids"].squeeze()
+            attention_mask = tokens["attention_mask"].squeeze()
+            batch_input_ids.append(input_ids)
+            batch_attention_mask.append(attention_mask)
+        batch_input_ids = torch.stack(batch_input_ids)
+        batch_attention_mask = torch.stack(batch_attention_mask)
+        return batch_input_ids, batch_attention_mask
+        
 def enlarge_past_key_values(past_key_values, beam_width):
     # モデルの入力のpast_keyをバッチx候補のタプルに修正
     # from [B, num_head, seq_len, esz] to [B*K, num_head, seq_len, esz]
