@@ -233,32 +233,8 @@ text_list = [
     "text1 ......"
 ]
 
-
-input_ids.to(device)
-model.eval()
-for step in range(decoding_len):
-    next_ids, past_key_values, last_hidden_states, logits = ContrastiveDecodingOneStepFast(
-        model,
-        input_ids,
-        input_mask,
-        beam_width,
-        alpha,
-        past_key_values,
-        last_hidden_states,
-        tokenizer,
-        logits,
-        device,
-        first_step=step == 0, #最初のステップのみ扱い違う
-    )
-    tokens = next_ids.squeeze(dim=-1).tolist()
-    for idx, t in enumerate(tokens): #バッチ数分
-        # EOSの場合スキップ
-        if is_eos[idx]:
-            continue
-        if t == tokenizer.eos_token_id:
-            is_eos[idx] = True
-            continue
-        generated[idx].append(t)
+output = model(text_list)
+print(output)
 ```
 
 次に、`T5SimCTGGenerate`の実装です。エンコーダの推論結果を保持したまま、それと一つ前のデコーダの出力を利用して、デコーダによる推論を行っています。また、GPU使用していた際に、メモリーエラーになっていたので、その対処を入れています。[論文実装はこの部分](https://github.com/yxuansu/SimCTG/blob/bb54480e5c43d62d5b660d5cdabaee7c7d7af442/document_generation/utlis.py#L126)になります。
