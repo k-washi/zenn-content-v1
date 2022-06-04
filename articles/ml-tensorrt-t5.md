@@ -3,7 +3,7 @@ title: "huggingface t5-base-japaneseのTensor-RTによる高速化" # 記事の�
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["機械学習", "python"] # タグ。["markdown", "rust", "aws"]のように指定する
-published: false # 公開設定（falseにすると下書き）
+published: True # 公開設定（falseにすると下書き）
 ---
 
 # はじめに
@@ -16,7 +16,7 @@ published: false # 公開設定（falseにすると下書き）
 
 
 環境構築に関しては、[公式の記事](https://developer.nvidia.com/blog/optimizing-t5-and-gpt-2-for-real-time-inference-with-tensorrt/)を参考にしています。詳細に関しては、下部に記載しています。
-Tensor-RTのバージョンに関しては、最新のreleaseである、ver 8.2がありますが変換後の上手く推論できなかったため、22/6/1時点で最新のmainブランチを使用しています。
+Tensor-RTのバージョンに関しては、最新のreleaseである、ver 8.2があります。しかし、変換後の推論が上手くできなかったため、22/6/1時点で最新のmainブランチを使用しています。
 
 基本的には、[公式t5変換notebook](https://github.com/NVIDIA/TensorRT/blob/main/demo/HuggingFace/notebooks/t5.ipynb)に則って、Tensor-RTに変換していきます。
 
@@ -36,12 +36,12 @@ Tensor RTの方が、約 5倍速くなっています。
 
 [公式t5変換notebook](https://github.com/NVIDIA/TensorRT/blob/main/demo/HuggingFace/notebooks/t5.ipynb) の実装に対して、修正した部分を解説します。
 
-1. T5_VARIANT = 't5-small' は、't5-base' など対照のモデルに合わせる必要がある。
+1. T5_VARIANT = 't5-small' は、't5-base' など対象のモデルに合わせる必要がある。
 
-2. TensorRT/demo/HuggingFace/T5/T5ModelConfig.pyのT5ModelTRConfigをモデルのconfigファイルに合わせる
+2. TensorRT/demo/HuggingFace/T5/T5ModelConfig.pyのT5ModelTRConfigをモデルのconfigファイルに合わせる。
   今回は、モデルのVOCAB SIZEが32128から、32000へ変更した。
 
-2. fp16の設定
+3. fp16の設定
 
 fp16を使用しない場合、false
 
@@ -49,7 +49,7 @@ fp16を使用しない場合、false
 metadata=NetworkMetadata(variant=variant, precision=Precision(fp16=False), other=T5Metadata(kv_cache=False))
 ```
 
-3. Tensor-RTへの変換時の設定ファイルをFineTuningしたモデルのconfig.jsonに合わせる
+4. Tensor-RTへの変換時の設定ファイルをFineTuningしたモデルのconfig.jsonに合わせる。
 
 ```python
 from T5.trt import T5TRTEncoder, T5TRTDecoder
@@ -66,7 +66,7 @@ tfm_config.feed_forward_proj = "gated-gelu"
 print(tfm_config)
 ```
 
-4. 推論処理
+5. 推論処理を別途実装
 
 以下、推論処理です。
 途中に出てくるクラスは、notebookに記載されています。
@@ -120,7 +120,7 @@ print(tokenizer.decode(_decoder_input_ids, skip_special_tokens=True)) # 最終�
 
 # 環境構築
 
-Tensor-RTの環境構築は面倒なので、公式のDocker(ubuntu 20.04のversoin)を修正したものを使用ました。
+Tensor-RTの環境構築は面倒なので、公式のDocker(ubuntu 20.04のversoin)を修正したものを使用しました。
 後ほど記載する、requirements.txtに加えて、pytorchのインストールをしていますが、適宜修正してください。
 
 ```dockerfile
@@ -219,7 +219,7 @@ ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${TRT_OSSPATH}/build/out:${TRT_LIBPATH}"
 WORKDIR /workspace
 ```
 
-このDockerコンテナを立ち上げるDocker-composeファイルが以下です。
+このDockerコンテナを立ち上げるdocker-composeファイルが以下です。
 Dockerfileのパスなどは適宜修正してください。
 
 ```yaml
@@ -279,3 +279,7 @@ mkdir -p build && cd build
 cmake .. -DTRT_LIB_DIR=$TRT_LIBPATH -DTRT_OUT_DIR=`pwd`/out
 make -j$(nproc)
 ```
+
+# まとめ
+
+以上、t5-base-japaneseの高速化の方法でした。実際、t5の処理速度で悩む場面は多いと思うので、ぜひ試して見てください。
