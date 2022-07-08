@@ -51,6 +51,10 @@ metadata=NetworkMetadata(variant=variant, precision=Precision(fp16=False), other
 
 4. Tensor-RTへの変換時の設定ファイルをFineTuningしたモデルのconfig.jsonに合わせる。
 
+以下、[sonoisa](https://zenn.dev/sonoisa)様より、コメントいただきました。
+> sonoisa/t5-base-japaneseモデル（原論文の設定のT5モデル）であれば、tfm_config.d_ff = 3072とtfm_config.feed_forward_proj = "relu"ですね。
+> T5 v1.1モデル（例えば、megagonlabs/t5-base-japanese-web）であれば、tfm_config.d_ff = 2048とtfm_config.feed_forward_proj = "gated-gelu"になります。
+
 ```python
 from T5.trt import T5TRTEncoder, T5TRTDecoder
 
