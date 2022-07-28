@@ -7,9 +7,7 @@ published: true # 公開設定（falseにすると下書き）
 ---
 
 こんにちは、[わっしー](https://twitter.com/kwashizzz)です。
-個人的にPythonでログを取る方法は、常に迷っています。
-簡単のため、余計なライブラリは使用せず、デフォルトで入っているloggingを使用したり、ファイルごとに分けたロガーを設定したいなどやりたいことはたくさんあります。
-この記事では、現在使用しているロギングの方法を紹介します。
+個人的にPythonでログを取る方法は、常に迷っています。簡単のため、余計なライブラリは使用せず、デフォルトで入っているloggingを使用したり、ファイルごとに分けたロガーを設定したいなどやりたいことはたくさんあります。この記事では、現在使用しているロギングの方法を紹介します。
 
 # ファイル構成
 
@@ -71,7 +69,7 @@ def get_logger(
     if logger is not None:
         return logger
     
-    format = "%(asctime)s (%(module)s:%(lineno)d) %(levelname)s: %(message)s"
+    format = "'%(levelname)-8s: %(asctime)s | %(filename)-12s - %(funcName)-12s : %(lineno)-4s -- %(message)s', datefmt='%Y-%m-%d %H:%M:%S'"
     logger = logging.getLogger(name)
     
     #ログレベルの設定
@@ -114,7 +112,7 @@ if __name__ == "__main__":
 左から、ログレベル、日時、ファイルネーム、関数名、ライン番号、メッセージです。これだけあれば、ある程度場所の特定は、可能だと思います。
 
 ```bash
-INFO    : 2021-05-05 16:41:20 | app.py       - main         : 16   -- appログテスト
+2021-05-05 16:41:20 (app.py:10)       - main         : 16   -- appログテスト
 ERROR   : 2021-05-05 16:41:20 | app.py       - main         : 17   -- appエラー
 INFO    : 2021-05-05 16:41:20 | module.py   - module       : 14   -- moduleログテスト
 ```
