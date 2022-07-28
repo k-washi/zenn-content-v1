@@ -63,7 +63,7 @@ param2: "test0"
 ```
 
 ここで、重要なのは、ファイルの開始時に、```@package _group_```のように書くことです。
-
+```# @package _group_```は、hydraの`1.2`では、必要なくなっていました。
 ## 設定ファイルの変更
 
 もし、機械学習の実験などで、パラメータを変更したいとします。このような時は、```test_param/test.yaml```など、別のファイルを読み込めば良いです。
@@ -117,7 +117,7 @@ class Config():
             print(f"Can not find file: {conf_dir}.")
             sys.exit(-1)
 
-        with initialize_config_dir(config_dir=conf_dir):
+        with initialize_config_dir(config_dir=conf_dir): # 1.2では、version_base=Noneという引数も必要になっていた
             cnf = compose(config_name="default.yaml")
             return cnf
 ```
