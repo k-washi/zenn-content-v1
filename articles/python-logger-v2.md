@@ -66,7 +66,7 @@ def get_logger(
     if logger is not None:
         return logger
     
-    format = "'%(levelname)-8s: %(asctime)s | %(filename)-12s - %(funcName)-12s : %(lineno)-4s -- %(message)s', datefmt='%Y-%m-%d %H:%M:%S'"
+    format = '%(levelname)-8s: %(asctime)s | %(filename)-12s - %(funcName)-12s : %(lineno)-4s -- %(message)s'
     logger = logging.getLogger(name)
     
     #ログレベルの設定
@@ -90,7 +90,9 @@ def get_logger(
             mode="a+", # 開くか、新しいテキストファイルを作って最後から更新
             encoding="utf-8"
             )
-        file_handler.setFormatter(logging.Formatter(format))
+        file_handler.setFormatter(logging.Formatter(
+            format, datefmt='%Y-%m-%d %H:%M:%S'
+            ))
         logger.addHandler(file_handler)
         
     _log_initialized[name] = logger
