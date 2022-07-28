@@ -16,13 +16,13 @@ published: false # 公開設定（falseにすると下書き）
 
 # 1. sshでサーバ接続
 
-```
+```s
 ssh -i ./*.cer azureuser@xx.xxx.xxx.xxx
 ```
 
 もし、`Permissions 0644 for ‘xxx.key’ are too open.`がでる場合は、
 
-```
+```s
 chmod 600 xxx.key
 ```
 で権限を変更してください。
@@ -35,7 +35,7 @@ chmod 600 xxx.key
 
 2. `.ssh/config`に以下の設定を追加 (AzureのVMサーバ用です)
 
-```
+```s
 Host SampleGpuServer
     HostName xx.xxx.xxx.xxx
     User azureuser
@@ -48,7 +48,7 @@ Host SampleGpuServer
 # 2. ubuntu環境設定
 適宜、必要なライブラリをインストールしてください。
 
-```
+```s
 apt-get update
 apt-get install -y build-essential vim \
     wget curl git zip gcc make openssl \
@@ -60,7 +60,7 @@ apt-get install -y build-essential vim \
 
 まずは、gpuが備わっているのか確認します。
 
-```
+```s
 lspci | grep -i NVIDIA
 ```
 
@@ -77,7 +77,7 @@ OS情報の確認は、`cat /etc/os-release` でできます。
 
 まずは、pyenvによるpythonのインストールです。
 
-```
+```s
 git clone https://github.com/yyuu/pyenv.git /root/.pyenv
 echo "export HOME=/root" >> ~/.bashrc 
 echo "export PYENV_ROOT=$HOME/.pyenv" >> ~/.bashrc 
@@ -94,7 +94,7 @@ pyenv rehash
 
 以下のようにして、pythonの仮想環境を設定できます。
 
-```
+```s
 git clone https://github.com/xxxxxxx/xxxxxxxxxxx.git
 cd ./xxxxxxxxxxxx
 python -m venv .venv
