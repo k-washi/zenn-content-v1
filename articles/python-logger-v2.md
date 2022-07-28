@@ -41,10 +41,7 @@ import logging.handlers # handlersを使用するため呼び出し必須
 from pathlib import Path
 from typing import Dict, Optional
 
-
-
 _log_initialized: Dict[str, logging.Logger] = {}
-
 
 def get_logger(
     debug: bool = False,
@@ -112,7 +109,7 @@ if __name__ == "__main__":
 左から、ログレベル、日時、ファイルネーム、関数名、ライン番号、メッセージです。これだけあれば、ある程度場所の特定は、可能だと思います。
 
 ```bash
-2021-05-05 16:41:20 (app.py:10)       - main         : 16   -- appログテスト
+INFO    : 2021-05-05 16:41:20 | app.py       - main         : 16   -- appログテスト
 ERROR   : 2021-05-05 16:41:20 | app.py       - main         : 17   -- appエラー
 INFO    : 2021-05-05 16:41:20 | module.py   - module       : 14   -- moduleログテスト
 ```
@@ -139,7 +136,6 @@ logger = get_logger(
     debug=False,
     filename=".log/sample.log",
 )
-
 
 from src.modules import module
 
