@@ -18,9 +18,9 @@ published: false # 公開設定（falseにすると下書き）
 
 [JTubeSpeech: 音声認識と話者照合のために YouTube から構築される日本語音声コーパス](https://www.slideshare.net/ShinnosukeTakamichi/jtubespeech-youtube)のスライドがわかりやすいです。
 
-1. 音声言語研究に必要な日本語オープンコーパス
-2. YouTube動画からコーパスを自動構築
-3. 音声認識・話者照合用のコーパス
+1. 音声言語研究に必要なオープンな日本語音声コーパスです
+2. YouTube動画からコーパスを自動構築されます
+3. 音声認識・話者照合用のコーパスです
 
 多言語対応だが、本記事では、日本語のコーパス構築に関してのみ解説します。
 
@@ -56,7 +56,7 @@ pip install -r requirements.txt
 
 # Youtubeから音声と字幕をダウンロード
 
-Youtubeから、**./data/ja/*.csv**に記載してあるVideoIdのビデオをダウンロードし、音声と字幕を抽出します。この操作は、READMEのstep4にあたります。
+Youtubeから、`./data/ja/*.csv`に記載してあるVideoIdのビデオをダウンロードし、音声と字幕を抽出します。この操作は、READMEのstep4にあたります。
 
 引数を適当に設定して、以下のコマンドで実行してください。
 
@@ -83,14 +83,14 @@ ls -1 /audio/downloads/ja/wav16k/*/ | wc -l
 動作確認済みのコードを、[k-washi/jtubespeech/tree/dev_kwashi](https://github.com/k-washi/jtubespeech/tree/dev_kwashi)に置いているので、コピーしてください。
 
 1. まず、必要な音声認識モデルをダウンロードします。
-**./scripts/align_model_download.py**でダウンロードします。
+`./scripts/align_model_download.py`でダウンロードします。
 
 ```
 python ./scripts/align_model_download.py
 ```
 
 2. 次に、字幕テキストと音声のアライメントによりCTCスコアを計算します。
-**scripts/align.py**でエラーが発生したため、別のブランチに、[**scripts/align2.py**](https://github.com/k-washi/jtubespeech/blob/dev_kwashi/scripts/align2.py)を作成しています。
+`scripts/align.py`でエラーが発生したため、別のブランチに、[`scripts/align2.py`](https://github.com/k-washi/jtubespeech/blob/dev_kwashi/scripts/align2.py)を作成しています。
 
 また、CUDAのメモリエラー対策のため、`longest_audio_segments=160`としています。(24564MiBの環境です。)
 
