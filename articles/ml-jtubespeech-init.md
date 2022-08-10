@@ -10,7 +10,7 @@ published: false # 公開設定（falseにすると下書き）
 
 こんにちは、[わっしー](https://twitter.com/kwashizzz)です。この記事では、[JTubeSpeech](https://github.com/sarulab-speech/jtubespeech)の日本語音声認識コーパスをローカル環境に構築する方法を解説します。
 
-※ masterが一部動作しなかったため、実行を確認したコードを、[k-washi/jtubespeech/tree/dev_kwashi](https://github.com/k-washi/jtubespeech/tree/dev_kwashi)に置いています。
+※ masterが一部動作しなかったため、実行を確認したコードを、[k-washi/jtubespeech/tree/dev_kwashi](https://github.com/k-washi/jtubespeech/tree/dev_kwashi)に置いています。もしかしたら、音声認識ライブラリなどのバージョンの違いで動作しなかったかもしれません。
 
 ※内容は、2022年8月11日に作成しました。
 
