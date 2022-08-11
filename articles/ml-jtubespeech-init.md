@@ -19,7 +19,7 @@ published: true # 公開設定（falseにすると下書き）
 [JTubeSpeech: 音声認識と話者照合のために YouTube から構築される日本語音声コーパス](https://www.slideshare.net/ShinnosukeTakamichi/jtubespeech-youtube)のスライドがわかりやすいです。
 
 1. 音声言語研究に必要なオープンな日本語音声コーパスです
-2. YouTube動画からコーパスを自動構築されます
+2. YouTube動画をベースにコーパスを自動構築しています
 3. 音声認識・話者照合用のコーパスです
 
 多言語対応だが、本記事では、日本語のコーパス構築に関してのみ解説します。
