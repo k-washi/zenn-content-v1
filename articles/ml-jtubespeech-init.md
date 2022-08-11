@@ -1,9 +1,9 @@
 ---
-title: "JTubeSpeech: YouTubeによる日本語音声コーパスの設定方法" # 記事のタイトル
+title: "JTubeSpeech: YouTubeによる日本語音声コーパスの構築方法" # 記事のタイトル
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["機械学習"] # タグ。["markdown", "rust", "aws"]のように指定する
-published: false # 公開設定（falseにすると下書き）
+published: true # 公開設定（falseにすると下書き）
 ---
 
 # はじめに
@@ -83,7 +83,7 @@ ls -1 /audio/downloads/ja/wav16k/*/ | wc -l
 動作確認済みのコードを、[k-washi/jtubespeech/tree/dev_kwashi](https://github.com/k-washi/jtubespeech/tree/dev_kwashi)に置いているので、コピーしてください。
 
 1. まず、必要な音声認識モデルをダウンロードします。
-`./scripts/align_model_download.py`でダウンロードします。
+`./scripts/align_model_download.py`でダウンロードします。こちらも上記の[github](https://github.com/k-washi/jtubespeech/tree/dev_kwashi)にコードを追加しています。
 
 ```
 python ./scripts/align_model_download.py
@@ -112,13 +112,25 @@ tail  /audio/downloads/ja/asr/segments.log
 tail  /audio/downloads/ja/asr/segments.txt
 
 # 以下のような出力です
+# ファイル名_ID ファイル名 開始時間 終了時間 CTCスコア テキスト
 LY9ewzIY8iQ_0114 LY9ewzIY8iQ 559.37 560.76 -1.8345 そうですね。今は
 LY9ewzIY8iQ_0115 LY9ewzIY8iQ 560.76 564.70 -4.8862 ドゥーチェのお見合い相手、とでも言っておきますか
 ```
 
+CTCスコアの閾値を`ms`として設定し、別の`segments.txt`ファイルに出力します。
+```
+awk -v ms=-0.3 '{ if ($5 > ms) {print} }' /audio/downloads/ja/asr/segments.txt > ./.data/segments.txt &
+```
+これが、音声認識コーパスとなります。
 
 
 # 最後に
+
+今回は、JTubeSpeechの日本語音声認識コーパスの作成方法を記事にしました。試行錯誤しながら実行したので、誤っている部分があったらご指摘のほど、お願いいたします。
+
+また、音声合成などもやっていきたいので、話者式別用のコーパスの作成も、今後やっていければと思います。
+
+---
 
 画像・自然言語・音声に関する機械学習の研究開発やMLOpsを行っています。もし、機械学習に関して、ご相談があれば、[@kwashizzz](https://twitter.com/kwashizzz)のアカウントまでDMしてください！
 これまでの、[機械学習記事のまとめ](https://zenn.dev/kwashizzz/articles/my-ml-articles-summary)です。
