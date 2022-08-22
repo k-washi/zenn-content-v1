@@ -3,11 +3,10 @@ title: "Solafuneのマルチ解像度画像の車両検出コンペ - MMDetectio
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["python", "ml"] # タグ。["markdown", "rust", "aws"]のように指定する
-published: false # 公開設定（falseにすると下書き）
+published: true # 公開設定（falseにすると下書き）
 ---
 
-こんにちは！鷲崎([@kwashizzz](https://twitter.com/kwashizzz))です。今回は、[Solafune](https://solafune.com/)という衛星データ解析コンテストプラットフォームのマルチ解像度画像の車両検出のコンペティションに挑戦してみました。  
-本記事では、データのダウンロードから、結果の提出まで解説しています。物体検出には[MMDetection](https://github.com/open-mmlab/mmdetection)を使用し、今回のコンペの評価指標である[OC-cost(Optimal Correction Cost)](https://arxiv.org/abs/2203.14438)の導入方法も解説しています。
+こんにちは！鷲崎([@kwashizzz](https://twitter.com/kwashizzz))です。今回は、[Solafune](https://solafune.com/)という衛星データ解析コンテストプラットフォームのマルチ解像度画像の車両検出のコンペティションに挑戦してみました。本記事では、データのダウンロードから、結果の提出まで解説しています。物体検出には[MMDetection](https://github.com/open-mmlab/mmdetection)を使用し、今回のコンペの評価指標である[OC-cost(Optimal Correction Cost)](https://arxiv.org/abs/2203.14438)の導入方法も解説しています。
 
 OC-Costに関しては、日本語の[この記事](https://cyberagent.ai/blog/research/computervision/16366/)がわかりやすかったです。
 
@@ -66,7 +65,6 @@ pip install -e .
 ここでは、データセットのダウンロードと、MMDetectionで使用するための前準備について解説します。
 
 まず、データセットのダウンロードです。今後、データセットは`./data/vdet`配下にあるとします。
-以下、データセットのダウンロード方法です。
 
 ```sh
 mkdir -p ./data
@@ -80,12 +78,14 @@ unzip -o ./data/vdet/train_images.zip -d ./data/vdet/
 ```
 
 次に、MMDetectionで使用するため、
+
 1. tif形式の画像をpngに変換する
 2. アノテーションを訓練、評価用に分割
 3. coco形式にアノテーションを変換
+
 を行います。
 
-まずは、1. tif形式の画像をpngに変換する処理です。
+まずは、tif形式の画像をpngに変換する処理です。
 
 ```python:./src/dataset/preprocess.py
 from typing import Union
@@ -168,9 +168,7 @@ if __name__ == "__main__":
     
 ```
 
-次にアノテーション`train.json`をtrain, evalに分割し、coco形式に変換する処理です。
-cocoのフォーマットに関しては、[MS COCO datasetのフォーマットまとめ](https://qiita.com/kHz/items/8c06d0cb620f268f4b3e)の記事を参考にしました。
-引数の`eval_rate`でevalをどの程度にするか変更してください。
+次にアノテーション`train.json`をtrain, evalに分割し、coco形式に変換する処理です。cocoのフォーマットに関しては、[MS COCO datasetのフォーマットまとめ](https://qiita.com/kHz/items/8c06d0cb620f268f4b3e)の記事を参考にしました。引数の`eval_rate`でevalをどの程度にするか変更してください。
 
 ```python:./src/dataset/ano_json_to_coco.py
 import json
@@ -367,10 +365,9 @@ wget https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_l_8x8_300e_coco
 cp -r ./mmdetection/configs/_base_ ./src/mmdet
 ```
 
-YOLOX-lの設定ファイルを`./src/mmdet/yolox/yolox_l_8x8_300e_coco_occost.py`として置くとします。
-基本的には、`mmdetection/configs/yolox/yolox_s_8x8_300e_coco.py`を参考に修正しています。
+YOLOX-lの設定ファイルを`./src/mmdet/yolox/yolox_l_8x8_300e_coco_occost.py`として置くとします。基本的には、`mmdetection/configs/yolox/yolox_s_8x8_300e_coco.py`を参考に修正しています。
 
-設定ファイルは以下になります。ほとんど変更がないですが、OC-Costの計算のため、`custom_imports`としてし`CocoDataset`を拡張した`CocoOtcDataset`を追加しています。パラメータとして、`evaluation`にOC-Costのパラメータ(`otc_params`)と計算に使用する予測BBoxのスコアの閾値`score_th`を設定しています。
+設定ファイルは以下になります。ほとんど変更ないですが、OC-Costの計算のため、`custom_imports`として`CocoDataset`を拡張した`CocoOtcDataset`を追加しています。パラメータとして、`evaluation`にOC-Costのパラメータ(`otc_params`)と計算に使用する予測BBoxのスコアの閾値`score_th`を設定しています。今回はクラス分類がないため、`alpha`(論文の$\lambda$に相当)は、$1$で良いと思います。
 
 ```python:./src/mmdet/yolox/yolox_l_8x8_300e_coco_occost.py
 _base_ = ['../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py']
@@ -591,8 +588,6 @@ def eval_ot_costs(gts, results, occost:OC_Cost, beta, score_th=0.5):
     occost_list = []
     for i, (gt, res) in enumerate(zip(gts, results)):
         gt, res  = gt[0], res[0]
-        
-
         gt_anos = bboxes_to_anos(gt, i)
         res_anos = bboxes_to_anos(res, i)
         
@@ -801,7 +796,7 @@ python ./mmdetection/tools/train.py ./src/mmdet/yolox/yolox_l_8x8_300e_coco_occo
 
 # テスト
 
-ここでは、学習した重みを使用して、`evaluation_images`の画像群に対し推論し、提出用のjsonファイル形式にします。
+ここでは、学習した重みを使用して、`evaluation_images`の画像群に対し推論し、提出用のjsonファイル形式に変換する処理を解説します。
 
 
 ```python:src/dettest/dettest.py
@@ -939,7 +934,7 @@ if __name__ == "__main__":
     convert_solafune_publish(output_dir / "result.json", output_dir / "publish.json", score_th=args.score_th)
 ```
 
-以下のコマンドで実行できます。引数ですが、`-c=設定ファイル`、`-m=重みファイル`、`-o=出力ディレクトリ`、`-s=BBoxの推論閾値`、`--cuda`でGPU実行になります。出力ディレクトリに出力される`publish.json`が提出用のファイルになります。
+以下のコマンドで実行できます。引数は、`-c=設定ファイル`、`-m=重みファイル`、`-o=出力ディレクトリ`、`-s=BBoxの推論閾値`、`--cuda`でGPU実行になります。出力ディレクトリに出力される`publish.json`が提出用のファイルになります。
 
 ```
 python ./src/dettest/dettest.py -c=./work_dirs/yolox_l_8x8_300e_coco_occost/yolox_l_8x8_300e_coco_occost.py -m=./work_dirs/yolox_l_8x8_300e_coco_occost/best_xxxxxxx.pth -o=./data/vdet/yolox_l_8x8_50e_coco_occost --cuda -s=0.5
