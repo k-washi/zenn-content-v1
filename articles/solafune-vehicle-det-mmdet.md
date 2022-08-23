@@ -64,9 +64,17 @@ pip install -e .
 
 ここでは、データセットのダウンロードと、MMDetectionで使用するための前準備について解説します。
 
-まず、データセットのダウンロードです。今後、データセットは`./data/vdet`配下にあるとします。コンペホームページより、`train.json`, `train_images.zip`, `evaluation_images.zip`をダウンロードしてください。そして、以下のように解凍します。
+まず、データセットのダウンロードです。今後、データセットは`./data/vdet`配下にあるとします。
+コンペホームページより、`train.json`, `train_images.zip`, `evaluation_images.zip`をダウンロードしてください。
+正確なリンクは、コンペ参加後に取得可能なダウンロードリンク(`train.json`のリンク)から類推し他ものを貼ってください。
 
 ```sh
+mkdir -p ./data
+mkdir -p ./data/vdet
+wget "https://xxxxx/train.json" -O ./data/vdet/train.json
+wget "https://xxxxx/train_images.zip" -O ./data/vdet/train_images.zip
+wget "https://xxxxx/evaluation_images.zip" -O ./data/vdet/evaluation_images.zip
+
 unzip -o ./data/vdet/evaluation_images.zip -d ./data/vdet/
 unzip -o ./data/vdet/train_images.zip -d ./data/vdet/
 ```
