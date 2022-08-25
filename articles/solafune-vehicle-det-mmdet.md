@@ -791,7 +791,7 @@ class CocoOtcDataset(CocoDataset):
 以下のコマンドで訓練を実行できます。
 
 ```
-python ./mmdetection/tools/train.py ./src/mmdet/yolox/yolox_l_8x8_300e_coco_occost.p
+python ./mmdetection/tools/train.py ./src/mmdet/yolox/yolox_l_8x8_300e_coco_occost.py
 ```
 
 # テスト
