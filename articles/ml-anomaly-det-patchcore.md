@@ -212,14 +212,21 @@ class kCenterGreedy(SamplingMethod):
         return new_batch
 ```
 
-最後に、新しい画像に対する異常検知です。正常画像による選択された特徴量に対する異常を検出します。
+最後に、新しい画像に対する異常検知です。正常画像による選択された特徴量に対する異常値を検出します。
 
 ```python
+
+from sklearn.neighbors import NearestNeighbors
+
 class PatchCoreModelModule(LightningModule):
     def test_step(self, batch, batch_idx): # Nearest Neighbour Search
-        self.embedding_coreset = pickle.load(open(self.embedding_dir / 'embedding.pickle', 'rb'))
+        # ここではbatch_size=1を想定
         x, gt, label, x_type = batch
-        # extract embedding
+
+        # 正常画像の特徴量を読み込みます
+        self.embedding_coreset = pickle.load(open(self.embedding_dir / 'embedding.pickle', 'rb'))
+        
+        # テスト画像の特徴量を計算します (train_stepと同じです)
         features = self(x)
         embeddings = []
         for feature in features:
@@ -227,23 +234,22 @@ class PatchCoreModelModule(LightningModule):
             embeddings.append(m(feature))
         embedding_ = embedding_concat(embeddings[0], embeddings[1])
         embedding_test = np.array(reshape_embedding(np.array(embedding_.cpu())))
-        # NN
-        nbrs = NearestNeighbors(n_neighbors=self.cfg.model.patchcore_n_neighbors, algorithm='ball_tree', metric='minkowski', p=2).fit(self.embedding_coreset)
-        score_patches, _ = nbrs.kneighbors(embedding_test)
-        anomaly_map = score_patches[:,0].reshape((self.cfg.plot.plot_img_size, self.cfg.plot.plot_img_size))
-        N_b = score_patches[np.argmax(score_patches[:,0])]
-        w = (1 - (np.max(np.exp(N_b))/np.sum(np.exp(N_b))))
-        score = w*max(score_patches[:,0]) # Image-level score
+
+
+        # k近傍法
+        # 最も近い特徴量をn_neighbores個探索します
+        nbrs = NearestNeighbors(n_neighbors=9, algorithm='ball_tree', metric='minkowski', p=2).fit(self.embedding_coreset)
+        score_patches, _ = nbrs.kneighbors(embedding_test) # 正解特徴量との距離 (1024, 9) : (特徴マップ32x32, 近傍特徴量9個)
+        anomaly_map = score_patches[:,0].reshape((32, 32)) # 最も近傍な特徴量との距離を1列から特徴マップの形式にreshape
         
-        gt_np = gt.cpu().numpy()[0,0].astype(int)
-        anomaly_map_resized = cv2.resize(anomaly_map, (self.cfg.imdata.input_size, self.cfg.imdata.input_size))
-        anomaly_map_resized_blur = gaussian_filter(anomaly_map_resized, sigma=4)
+        anomaly_map_resized = cv2.resize(anomaly_map, (254, 254)) # 本のサイズにresize
+        anomaly_map_resized_blur = gaussian_filter(anomaly_map_resized, sigma=4) # 結果がシャープすぎるので少しぼかす
 ```
 
 
 # 最後に
 
-
+以上、簡単に処理の流れを解説しました。かなり精度良く異常部分を検出してくれていますが、一方で、製品ごとに、異常値のスコアが異なっていたりと閾値の設定が必要になります。。また、まだまだ、これのみに外観検査を任せられる精度ではない気がします。閾値の設定を低くめに設定し、人が目視する量を減らすために使うなどコスト削減などには使えるかもしません。
 
 ---
 
