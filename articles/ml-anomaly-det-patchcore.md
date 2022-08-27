@@ -242,7 +242,7 @@ class PatchCoreModelModule(LightningModule):
         score_patches, _ = nbrs.kneighbors(embedding_test) # 正解特徴量との距離 (1024, 9) : (特徴マップ32x32, 近傍特徴量9個)
         anomaly_map = score_patches[:,0].reshape((32, 32)) # 最も近傍な特徴量との距離を1列から特徴マップの形式にreshape
         
-        anomaly_map_resized = cv2.resize(anomaly_map, (254, 254)) # 本のサイズにresize
+        anomaly_map_resized = cv2.resize(anomaly_map, (254, 254)) # 元の画像サイズにresize
         anomaly_map_resized_blur = gaussian_filter(anomaly_map_resized, sigma=4) # 結果がシャープすぎるので少しぼかす
 ```
 
