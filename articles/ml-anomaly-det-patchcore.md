@@ -55,8 +55,8 @@ class PatchCoreModelModule(LightningModule):
     def forward(self, x_t):
         # 特徴量を出力
         # length:2 
-        # y[0]:torch.Size([2, 512, 32, 32]) 
-        # y[1]torch.Size([2, 1024, 16, 16])
+        # y[0]:torch.Size([b, 512, 32, 32]) 
+        # y[1]torch.Size([b, 1024, 16, 16])
         
         self.features = []
         _ = self.model(x_t)
