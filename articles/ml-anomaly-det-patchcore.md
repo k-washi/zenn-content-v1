@@ -12,7 +12,7 @@ published: false # 公開設定（falseにすると下書き）
 
 まずは、実際に試した結果です。下図の上は正常画像、下は異常画像です。異常部分が赤くなっており、製品が欠損していることがわかります。
 
-![](https://storage.googleapis.com/zenn-user-upload/7f4dd4a360b1-20220827.png)
+![](https://storage.googleapis.com/zenn-user-upload/08dabbd0fbe0-20220827.png)
 
 PatchCoreの詳細については、[外観検査向け異常検知手法に関する論文紹介](https://techblog.leapmind.io/blog/20220701-introduction_to_patchcore/)の記事がわかりやすいです。
 
