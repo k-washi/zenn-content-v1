@@ -8,7 +8,9 @@ published: false # 公開設定（falseにすると下書き）
 
 # はじめに
 
-こんにちは、[わっしー](https://twitter.com/kwashizzz)です。最近、画像生成のアプリやデモが流行って、めっちゃ試したくなりますよね。私も、実際に動かし、収集したあくたんこと[湊あくあ](https://hololive.hololivepro.com/talents/minato-aqua/)さんの画像を用いてFineTuningしてみました。以下、生成した画像ですが、どうでしょうか！めっちゃすごくて感動です。特にお気に入りは、真ん中左の、ちょっと生意気なあくたんの画像です。
+こんにちは、[わっしー](https://twitter.com/kwashizzz)です。最近、画像生成のアプリやデモが流行って、めっちゃ試したくなりますよね。私も、実際に動かし、あくたんこと[湊あくあ](https://hololive.hololivepro.com/talents/minato-aqua/)さんの画像を用いてFineTuningしてみました。あくたんの、チャンネル登録よろしくお願いします。
+
+以下、生成した画像ですが、どうでしょうか！めっちゃすごくて感動です。特にお気に入りは、真ん中左の、ちょっと生意気なあくたんの画像です。
 
 ![](https://storage.googleapis.com/zenn-user-upload/5152a7ff702a-20220915.jpg)
 
