@@ -14,6 +14,10 @@ published: false # 公開設定（falseにすると下書き）
 
 ![](https://storage.googleapis.com/zenn-user-upload/5152a7ff702a-20220915.jpg)
 
+画質がいいやつも置いときますね。
+
+![](https://storage.googleapis.com/zenn-user-upload/36f827b3b34e-20220915.png)
+
 実際には、ランダムシードを変更しつつ、何百枚も生成して、よかったものを選択しています。
 
 本記事では、自前で収集した画像群を用いてFineTuningする方法を紹介します。
