@@ -3,16 +3,16 @@ title: "OpenAIの音声認識モデル Whisperの解説 / Fine Tuning 方法" # 
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["機械学習"] # タグ。["markdown", "rust", "aws"]のように指定する
-published: false # 公開設定（falseにすると下書き）
+published: true # 公開設定（falseにすると下書き）
 ---
 
-OpenAIから、かなりすごい音声認識モデル [Whisper](https://github.com/openai/whisper)が発表されました。特出すべき点は、68万時間という、かなりヤバめのデータ量で訓練しており、英語では商用の音声認識システムや人間の書き起こしに匹敵しているとのことです。
+OpenAIから、かなりすごい音声認識モデル [Whisper](https://github.com/openai/whisper)が発表されました。特出すべき点は、教師付き音声68万時間という、かなりヤバめのデータ量で訓練しており、英語では商用の音声認識システムや人間の書き起こしに匹敵する性能とのことです。
 
 社内でも日本語、ブルガリア語、韓国語で試してみましたが、すごい精度でした。日本語の場合、漢字の間違いが多々ありましたが、発音は大体あってそうでした。ブルガリア語は、ロシア語で認識されていました。韓国語は、完璧でした。
 
-しかし、[Github](https://github.com/openai/whisper)に公開されたコードを見てみると、訓練コードが含まれておらず、公開の予定もないそうです。そこで、本記事では、Whisperの解説に加えて、試しに作成してみたFine Tuningの方法を解説します。
+しかし、[Github](https://github.com/openai/whisper)に公開されたコードを見てみると、訓練コードが含まれておらず、公開の予定もないそうです。そこで、本記事では、Whisperの解説に加えて、Fine Tuningの方法を解説します。
 
-※ Fine Tungingが上手くいってそうに見えるのですが、正確なコードではないと思います。気付いた点がありましたら、コメントください。
+※ Fine Tungingを何となくで作成しているので、正確なコードではないです。気付いた点がありましたら、コメントください。
 
 全てのコードは、[Whisper](https://github.com/openai/whisper)の[Discussion: Finetuning/Training code ?](https://github.com/openai/whisper/discussions/64#discussioncomment-3765117)をみてください。
 
@@ -33,7 +33,7 @@ LibriSpeechで学習したwav2vec2.0と比較した結果が、論文中のTable
 wav2vec2.0の学習対象であるLibriSpeechにおいて、Whisperはwav2vec2.0と同等の性能を示しており、他のドメインのデータセットでは、誤り率をかなり低減できていることがわかります。とてもすごいゼロショット性能です！
 
 
-また、英語における人間による書き起こしとの比較ですが、以下の図になります。左側が、音声認識システム、右側が人間による書き起こしのWERです。これもすごい結果で、人間とWhisperはほとんど精度差がありません。
+また、英語における人間による書き起こしとの比較ですが、以下の図になります。左側が、音声認識システム、右側が人間による書き起こしのWERです。これもすごい結果で、人間とWhisperは、ほとんど精度差がありません。
 
 ![](https://storage.googleapis.com/zenn-user-upload/7179ee64bd6a-20220930.png)
 
@@ -42,11 +42,11 @@ wav2vec2.0の学習対象であるLibriSpeechにおいて、Whisperはwav2vec2.0
 # 手法の概要
 
 モデルのアーキテクチャは、以下の図のように単純で、音声を入力としたエンコーダ、デコーダ形式のTransformerです。
-デコーダでは、エンコーダで抽出した音声特徴量をクロスアッテンションの入力としています。そして、SOT(Start of transcript)を最初のトークンとして、デコーダを繰り返すだけです。
+デコーダでは、エンコーダで抽出した音声特徴量をクロスアッテンションの入力としています。そして、SOT(Start of transcript)を最初のトークンとして、デコードを繰り返すだけです。
 
-実際、音声認識をする際には、以下の図のようにSOT、Langage Tag、Transcribe、No Timestampを組み合わせでスタートすれば良いです。
+実際、音声認識をする際には、以下の図のようにSOT、Langage Tag、Transcribe、No Timestampの組み合わせでスタートすれば良いです。
 
-例えば、「こんにちは」という日本語の場合は、(SOT, Ja, Transcribe, No Timestamp)をはじめのデコーダ入力とし、結果として、(Ja, Transcribe, No Timestamp, こ)が推定され、その後、(SOT, Ja, Transcribe, No Timestamp, こ)を入力とし、(Ja, Transcribe, No Timestamp, こ, ん)が推定されていくみたいな感じです。「こ」、「ん」などの単語は、デコーダで各トークンのクラス確率を推定されるので、その最大値のIndexをとり、それをトークナイザーで文字や単語に直すという手順で取得できます。
+例えば、「こんにちは」という日本語の場合は、(SOT, Ja, Transcribe, No Timestamp)をはじめのデコーダ入力とし、結果として、(Ja, Transcribe, No Timestamp, こ)が推定されます。その後、(SOT, Ja, Transcribe, No Timestamp, こ)を入力とし、(Ja, Transcribe, No Timestamp, こ, ん)が推定されていくみたいな感じです。「こ」、「ん」などの単語は、デコーダで各トークンのクラス確率が推定されるので、その最大値のIndexをとり、それをトークナイザーで文字や単語に直すという手順で取得できます。
 
 ![](https://storage.googleapis.com/zenn-user-upload/89b506b237a9-20220930.png)
 
@@ -88,7 +88,7 @@ def load_wave(wave_path, sample_rate:int=16000) -> torch.Tensor:
 
 JVSデータセットをgoogle driveからダウンロードします。
 
-```s
+```python
 %%capture
 import gdown
 gdown.download('https://drive.google.com/u/0/uc?id=19oAw8wWn3Y7z6CKChRdAyGOB9yupL_Xt', 'jvs.zip', quiet=False)
@@ -442,6 +442,6 @@ for b in tqdm(loader):
 
 画像・自然言語・音声に関する機械学習の研究開発やMLOpsを行っています。もし、機械学習に関して、ご相談があれば、[@kwashizzz](https://twitter.com/kwashizzz)のアカウントまでDMしてください！
 
-meatyで[カジュアル面談](https://meety.net/matches/DtCWdBaoxEoe)もやっています。機械学習を導入したいけど困っているとかの相談もちょくちょくあるので、気軽に申し込んでください。
+meatyで[カジュアル面談](https://meety.net/matches/DtCWdBaoxEoe)もやっています。機械学習を導入したいけど困っているとかの相談もちょくちょくあります。気軽に申し込んでください。
 
 これまでの、[機械学習記事のまとめ](https://zenn.dev/kwashizzz/articles/my-ml-articles-summary)です。
