@@ -442,8 +442,6 @@ for b in tqdm(loader):
 
 画像・自然言語・音声に関する機械学習の研究開発やMLOpsを行っています。もし、機械学習に関して、ご相談があれば、[@kwashizzz](https://twitter.com/kwashizzz)のアカウントまでDMしてください！
 
-<iframe class="meety-embed" src="https://meety.net/embed/matches/DtCWdBaoxEoe?service=meety&color=pink"
-  style="border: 0; display: block; max-width: 99%; width: 498px; height: 228px; padding: 0px; margin: 0px; position: static; visibility: visible;"></iframe>
-
+meatyで[カジュアル面談](https://meety.net/matches/DtCWdBaoxEoe)もやっています。機械学習を導入したいけど困っているとかの相談もちょくちょくあるので、気軽に申し込んでください。
 
 これまでの、[機械学習記事のまとめ](https://zenn.dev/kwashizzz/articles/my-ml-articles-summary)です。
