@@ -3,7 +3,7 @@ title: "Python 設定ファイルを用いて処理を呼び出す方法" # 記�
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["python", "機械学習"] # タグ。["markdown", "rust", "aws"]のように指定する
-published: false # 公開設定（falseにすると下書き）
+published: true # 公開設定（falseにすると下書き）
 ---
 
 [MMDetection](https://github.com/open-mmlab/mmdetection)や[EasyCV](https://github.com/alibaba/EasyCV)では、データ処理のパイプラインを設定ファイルに書くことで、処理の内容、順序を定義することができます。
