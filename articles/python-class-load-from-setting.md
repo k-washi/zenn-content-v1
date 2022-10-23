@@ -1,5 +1,5 @@
 ---
-title: "Python 設定ファイルで処理パイプラインを作成する方法" # 記事のタイトル
+title: "Python 設定ファイルを用いて処理を呼び出す方法" # 記事のタイトル
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["python", "機械学習"] # タグ。["markdown", "rust", "aws"]のように指定する
@@ -10,7 +10,7 @@ published: false # 公開設定（falseにすると下書き）
 
 例えば、データ読み込み後の処理パイプラインは、以下のように書かれています。
 
-```python: https://github.com/alibaba/EasyCV/blob/master/configs/detection/common/dataset/autoaug_coco_detection.py
+```python: EasyCV/blob/master/configs/detection/common/dataset/autoaug_coco_detection.py
 train_pipeline = [
     dict(type='MMRandomFlip', flip_ratio=0.5),
     dict(type='MMNormalize', **img_norm_cfg),
@@ -56,7 +56,8 @@ cfg = {
         "a": "sample_str"
     }
 
-# SAMPLEという処理辞書から設定辞書を用いて処理クラスを呼び出し、type以外の引数を用いて、インスタンスを作成
+# SAMPLEという処理辞書から設定辞書を用いて処理クラスを呼び出し
+# type以外の引数を用いて、インスタンスを作成
 s = build_from_cfg(
     cfg,
     SAMPLE
@@ -65,9 +66,11 @@ s = build_from_cfg(
 print(s.forward()) # sample_str
 ```
 
+この辞書をlist化することで、設定ファイルを用いたパイプラインのような扱いをすることができます。
+
 # 処理辞書の作成と呼び出し
 
-`Register`と`build_from_cfg`は、以下のようなコードになります。これは、[EasyCV]の[registry.py](https://github.com/alibaba/EasyCV/blob/b737027aa46b41ba9074d3c3cc11b22de06dd88a/easycv/utils/registry.py#L1)を参考にしています。
+`Register`と`build_from_cfg`は、以下のようなコードになります。これは、EasyCVの[registry.py](https://github.com/alibaba/EasyCV/blob/b737027aa46b41ba9074d3c3cc11b22de06dd88a/easycv/utils/registry.py#L1)とほぼ一緒です。
 
 ```python:src/util/registry.py
 import inspect
@@ -171,15 +174,16 @@ class SampleCls():
 from src.util.repo import SAMPLE
 from src.util.registry import build_from_cfg
 
-print(SAMPLE.name)
-print(SAMPLE.module_dict)
-s = build_from_cfg(
-    {"type": "SampleCls"},
-    SAMPLE,
-    {"a": "sample_str"}
-)
+cfg = {
+        "type": "SampleCls",
+        "a": "sample_str"
+    }
 
-print(s.forward())
+s = build_from_cfg(
+    cfg,
+    SAMPLE
+)
+print(s.forward()) # sample_str
 ```
 
 もし、`import`のパスが通らない場合は、[sys.path.append() を使わないでください](https://qiita.com/siida36/items/b171922546e65b868679)を参考にしてみてください。
@@ -204,6 +208,8 @@ from src.util.repo import SAMPLE
 
 __all__ = ["SAMPLE"]
 ```
+
+>`__all__`は、`from some_package import * `のような場合に読み込まれるモジュールを制御しているらしいです。
 
 次に、`src/sample/__init__.py`を作成します。
 
