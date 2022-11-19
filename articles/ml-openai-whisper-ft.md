@@ -69,7 +69,7 @@ wav2vec2.0の学習対象であるLibriSpeechにおいて、Whisperはwav2vec2.0
 ! pip install jiwer
 ! pip install pyopenjtalk==0.3.0
 ! pip install pytorch-lightning==1.7.7
-! pip install -qqq evaluate==0.2.2
+! pip install -qqq evaluate==0.3.0
 ```
 
 ## audioの読み込み
