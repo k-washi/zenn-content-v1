@@ -4,6 +4,7 @@ emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["初心者"] # タグ。["markdown", "rust", "aws"]のように指定する
 published: true # 公開設定（falseにすると下書き）
+publication_name: "fusic"
 ---
 
 こんにちは！鷲崎([@kwashizzz](https://twitter.com/kwashizzz))です。
@@ -11,7 +12,7 @@ published: true # 公開設定（falseにすると下書き）
 
 基本的には、管理者権限で、[WSL 上で同一ディストリビューションの環境を複数インストール･管理する](https://qiita.com/souyakuchan/items/9f95043cf9c4eda2e1cc)を実行すればうまくいきます。
 
-しかし、Ubuntu22.04をインストールした際に、ユーザを作成しましたが、rootユーザで入ってしまい、`apdate`
+しかし、Ubuntu22.04をインストールした際に、ユーザを作成しましたが、rootユーザで入ってしまい、`update`
 などがうまく動作しませんでした。
 
 そこで、`wsl --distribution 作成したディストリビューション名 --user <ユーザ名>` で環境に入ると、うまく動作しました。
