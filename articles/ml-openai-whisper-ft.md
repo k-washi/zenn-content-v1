@@ -4,6 +4,7 @@ emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["機械学習"] # タグ。["markdown", "rust", "aws"]のように指定する
 published: true # 公開設定（falseにすると下書き）
+publication_name: "fusic"
 ---
 
 OpenAIから、かなりすごい音声認識モデル [Whisper](https://github.com/openai/whisper)が発表されました。特出すべき点は、教師付き音声68万時間という、かなりヤバめのデータ量で訓練しており、英語では商用の音声認識システムや人間の書き起こしに匹敵する性能とのことです。
