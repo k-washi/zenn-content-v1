@@ -173,6 +173,7 @@ sudo apt install ~nros-humble-rqt*
 ```
 
 rqtを実行して、Tutorial上の図のように行っていきます。(Plugins > Services > Service Callerの画面です。)
+
 ```
 rqt
 ``
