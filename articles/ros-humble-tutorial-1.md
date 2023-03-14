@@ -90,3 +90,91 @@ echo "export ROS_LOCALHOST_ONLY=1" >> ~/.bashrc
 ```
 
 ## [Using turtlesim and rqt](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Introducing-Turtlesim/Introducing-Turtlesim.html)
+
+Goal: 今後のチュートリアルに備えて、turtlesimパッケージとrqtツールをインストールし、使用する。
+
+>Turtlesimは、ROS 2を学習するための軽量シミュレータです。rqtは、ROS 2のGUIツールです。rqtで行うことはすべてコマンドラインで行うことができますが、ROS 2の要素をより簡単に、よりユーザーフレンドリーに操作する方法を提供します。ROSの基本概念の説明をします。
+
+### **1 Install turtlesim**
+
+Turtlesimをインストール
+
+```s
+sudo apt update
+
+sudo apt install ros-humble-turtlesim
+```
+
+パッケージの確認
+
+```
+ros2 pkg executables turtlesim
+```
+
+出力
+
+```
+turtlesim draw_square
+turtlesim mimic
+turtlesim turtle_teleop_key
+turtlesim turtlesim_node
+```
+
+
+### **2 Start turtlesim**
+
+Turtlesimの実行
+
+```
+ros2 run turtlesim turtlesim_node
+```
+
+### **3 Use turtlesim**
+
+別のターミナルを開いて、以下を実行
+
+```
+ros2 run turtlesim turtle_teleop_key
+```
+
+実行して、矢印で移動させようとしたが、反応しなかった。（wslだからか？）
+
+しかし、以下のようにnodeなどの確認すると、起動しているようでした。
+
+```s
+~/ros-vio-tutorial# ros2 node list
+/teleop_turtle
+
+~/ros-vio-tutorial# ros2 topic list
+/parameter_events
+/rosout
+/turtle1/cmd_vel
+
+~/ros-vio-tutorial# ros2 service list
+/teleop_turtle/describe_parameters
+/teleop_turtle/get_parameter_types
+/teleop_turtle/get_parameters
+/teleop_turtle/list_parameters
+/teleop_turtle/set_parameters
+/teleop_turtle/set_parameters_atomically
+
+~/ros-vio-tutorial# ros2 action list
+/turtle1/rotate_absolute
+~/ros-vio-tutorial# 
+```
+
+動作しないなら、無理やりnodeにデータを流し込んでみます。
+チュートリアルをそのまま進めて、rqtで実行します。
+
+### 4 Install rqt & 5 Use rqt
+
+```
+sudo apt install ~nros-humble-rqt*
+```
+
+rqtを実行して、Tutorial上の図のように行っていきます。(Plugins > Services > Service Callerの画面です。)
+```
+rqt
+``
+
+`/turtle1/teleport_absolute`で、`x,y`の値を変更すると、亀が移動すると思います。また、Tutorial通りに、`'turtle2'`を作成し、`ros2 run turtlesim turtle_teleop_key --ros-args --remap turtle1/cmd_vel:=turtle2/cmd_vel`を実行すると、矢印キーで亀が移動しました。
