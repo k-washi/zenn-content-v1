@@ -176,6 +176,6 @@ rqtを実行して、Tutorial上の図のように行っていきます。(Plugi
 
 ```
 rqt
-``
+```
 
 `/turtle1/teleport_absolute`で、`x,y`の値を変更すると、亀が移動すると思います。また、Tutorial通りに、`'turtle2'`を作成し、`ros2 run turtlesim turtle_teleop_key --ros-args --remap turtle1/cmd_vel:=turtle2/cmd_vel`を実行すると、矢印キーで亀が移動しました。
