@@ -8,10 +8,12 @@ publication_name: "fusic"
 ---
 
 こんにちは！鷲崎([@kwashizzz](https://twitter.com/kwashizzz))です。
-最近、Windowsに乗り換え、WSLでROSを動かすため試行錯誤しています。ほぼやることないですが...
+最近、Windowsに乗り換え、WSLでROSを動かすため試行錯誤しています。
 
 WSL環境で環境作成ミスると面倒なので、WSL2のディストリビューションをコピーして作成するようにして、自由に使える環境を作成しています。
 方法に関しては、[WSL2で同一環境を複数インストール](https://zenn.dev/fusic/articles/wsl-multi-dist) で解説しています。
+
+本記事では、ROS2のインストールからTutorial（途中）までの補足などを行います。
 
 # ROS2 Humbleのインストール方法
 
@@ -179,3 +181,125 @@ rqt
 ```
 
 `/turtle1/teleport_absolute`で、`x,y`の値を変更すると、亀が移動すると思います。また、Tutorial通りに、`'turtle2'`を作成し、`ros2 run turtlesim turtle_teleop_key --ros-args --remap turtle1/cmd_vel:=turtle2/cmd_vel`を実行すると、矢印キーで亀が移動しました。
+
+### [Understanding nodes](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Nodes/Understanding-ROS2-Nodes.html)
+
+>ROSの各Nodeは、単一のモジュール目的（例えば、車輪のモーターを制御するための1つのノード、レーザーレンジファインダーを制御するための1つのノードなど）を担当する必要があります。各Nodeは、Topic、Service、Action、またはパラメータを介して、他のNodeとデータを送受信することができます。
+
+### **Tasks**
+
+**パッケージの起動**
+
+```
+ros2 run <package_name> <executable_name>
+```
+
+起動中のノードは、以下で確認できる
+
+```
+ros2 node list
+```
+
+**Remapping**
+
+以下の例のように、node名やtopic name, service nameなどのデフォルトの定義を再割り当てできる。以下のコマンドでは、デフォルトでは、node名が`/turtlesim`だが、`/my_turtle`に変更している。
+
+```
+ros2 run turtlesim turtlesim_node --ros-args --remap __node:=my_turtle
+```
+
+**ros2 node info**
+
+以下のコマンドで、nodeの詳細情報を参照できる。
+
+```
+ros node info <node_name>
+
+ros2 node info /my_turtle
+```
+
+## [Understanding topics](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Topics/Understanding-ROS2-Topics.html)
+
+>ROS2は、複雑なシステムを多くのモジュール化されたノードに分解します。トピックはROSグラフの重要な要素で、ノードがメッセージを交換するためのバスとして機能します。
+
+ROSには、Publisherという、メッセージを配信する配信者と、Subscriberという、メッセージを受け取る購買者という概念がある。
+
+> ノードは、任意の数のトピックにデータを配信し、同時に任意の数のトピックからのデータを受け取ることができる。（PublisherはTopicにデータを配信し、SubscriberはTopicからへデータを受け取る。）
+
+
+**2 rqt_graph**
+
+`rqt_graph`で、Node, topic, 送受信データ名の関係グラフを可視化できる。`rqt`で、画面を開いて、`Plugins > Introspection > Node Graph`でも可能。
+
+**3 ros2 topic list**
+
+`ros2 topic list`で、現在使用中のtopicの一覧を返す。Topicのデータの型（Topic type)の一覧も取得する場合は、`ros2 topic list -t`とする。
+
+```
+/turtle1/cmd_vel [geometry_msgs/msg/Twist]
+```
+
+**4 ros2 topic echo**
+
+Topicを流れるデータを可視化する場合、`ros2 topic echo <topic_name>`
+
+`ros2 topic echo /turtle1/cmd_vel`の場合、
+
+```s
+linear:
+  x: 2.0
+  y: 0.0
+  z: 0.0
+angular:
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  ---
+```
+
+**5 ros2 topic info**
+
+`ros2 topic info <topic_name>`で、Topicの情報を取得できる。Topicの型(`<msg_type>`)、Publisher, Subscriptionの数を以下のように出力。
+
+```
+Type: geometry_msgs/msg/Twist
+Publisher count: 1
+Subscription count: 2
+```
+
+Nodeと同様に、Topicの型(`<msg_type>`)を、`ros2 topic list -t`で可視化できる。例えば、出力`geometry_msgs/msg/Twist`の場合、`geometry_msgs`パッケージの中の`Twist`と呼ばれる`msg`という型である。
+
+この型の詳細は、`ros2 interface show <msg type>`で確認できる。
+
+`ros2 interface show geometry_msgs/msg/Twist`の場合、
+
+```s
+    Vector3  linear
+            float64 x
+            float64 y
+            float64 z
+    Vector3  angular
+            float64 x
+            float64 y
+            float64 z
+```
+
+**7 ros2 topic pub**
+
+コマンドラインから、直接データをpublishできる。
+
+```
+ros2 topic pub <topic_name> <msg_type> '<args>'
+```
+
+`<args>`が実際のデータ部分です。
+
+例えば、`ros2 topic pub --once /turtle1/cmd_vel geometry_msgs/msg/Twist "{linear: {x: 2.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 1.8}}"`で、publishできる。`--once`の場合、1つのメッセージをpublishしたあと、処理終了(exit)する。
+
+もし、1Hzでデータをpublishし続ける場合、`--rate 1`の引数をつける。
+
+**8 ros2 topic hz**
+
+データをTopicにpublishする頻度を取得する場合、`ros2 topic hz <topic_name>`を用いる。
+
+## [Understanding services](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Services/Understanding-ROS2-Services.html)

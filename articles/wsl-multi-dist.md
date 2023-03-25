@@ -39,3 +39,23 @@ vi /etc/wsl.conf
 default=<user_name>
 ```
 
+# Dockerを使用する
+
+[Ｗindows で ＷSL2 (Ubuntu) ＋ docker compose 環境構築](https://footloose-engineer.com/blog/2022/05/02/wsl2-ubuntu-docker-compose-setup/#toc9)
+を参考にDocker, Docker-composeをインストール
+
+以下を実行
+
+```
+sudo PWD=${PWD} docker-compose up -d
+```
+
+# gitを使用する
+
+windowsにgitをインストールし、そのgitに対して、wslから、パスを通します。(wsl2にgitをインストールして使用すると遅いらしい)
+
+```
+git config --global credential.helper "/mnt/c/Program\ Files/Git/mingw64/bin/git-credential-manager.exe"
+```
+
+参考: [Linux 用 Windows サブシステムで Git の使用を開始する](https://learn.microsoft.com/ja-jp/windows/wsl/tutorials/wsl-git)
