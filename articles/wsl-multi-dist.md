@@ -50,6 +50,17 @@ default=<user_name>
 sudo PWD=${PWD} docker-compose up -d
 ```
 
+GPUを使用する場合
+
+[WSL での ML の GPU アクセラレーションの概要](https://learn.microsoft.com/ja-jp/windows/wsl/tutorials/gpu-compute)　でGPU周りを設定後
+
+```
+sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
+sudo service docker restart
+```
+
+を実行する
+
 # gitを使用する
 
 windowsにgitをインストールし、そのgitに対して、wslから、パスを通します。(wsl2にgitをインストールして使用すると遅いらしい)
