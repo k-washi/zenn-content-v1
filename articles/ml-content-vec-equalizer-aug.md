@@ -3,7 +3,7 @@ title: "イコライザーを用いた音声データ拡張" # 記事のタイ�
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["機械学習", "音声"] # タグ。["markdown", "rust", "aws"]のように指定する
-published: false # 公開設定（falseにすると下書き）
+published: true # 公開設定（falseにすると下書き）
 publication_name: "fusic"
 ---
 
@@ -44,7 +44,7 @@ publication_name: "fusic"
 
 イコライザーでデータ拡張を行う実装を切り出しています。
 
-```python: https://github.com/auspicious3000/contentvec/blob/main/contentvec/data/audio/contentvec_dataset.py
+```python: contentvec/data/audio/contentvec_dataset.py
 import numpy as np
 from scipy.signal import sosfilt
 from fairseq.data.audio.audio_utils_1 import params2sos
