@@ -26,7 +26,7 @@ publication_name: "fusic"
 
 まず、単語の解説をします。
 
-音声からのコンテンツ抽出器と有名な[ContentVec](https://arxiv.org/abs/2204.09224)の学習で使用されたイコライザーのフィルターとして、`Peak Filter`, `High Shelf Filter`, `Low Shelf Filter`があります。
+音声からのコンテンツ抽出器として有名な[ContentVec](https://arxiv.org/abs/2204.09224)の学習で使用されたデータ拡張用のイコライザーのフィルターとして、`Peak Filter`, `High Shelf Filter`, `Low Shelf Filter`があります。
 
 - `Peak Filter`は、指定した周波数を中心として、増幅や減少を行うフィルタです。
 - `High Shelf Filter`は、指定した周波数以上の帯域にある信号の増幅や減少を行うフィルターです。
@@ -42,7 +42,7 @@ publication_name: "fusic"
 
 実装に関しては、[ContentVecのgithub](https://github.com/auspicious3000/contentvec)を参考に紹介します。
 
-イコライザーの実装を切り出しています。
+イコライザーでデータ拡張を行う実装を切り出しています。
 
 ```python: https://github.com/auspicious3000/contentvec/blob/main/contentvec/data/audio/contentvec_dataset.py
 import numpy as np
@@ -61,7 +61,7 @@ Qmin, Qmax = 2, 5
         return wav
 ```
 
-`uniform`関数でランダムな値を`size`分作成しています。これは、以下のようなジェネレータオブジェクトです。このように、ジェネレータを作成している理由として、乱数生成処理の高速化があるそうです。
+`uniform`関数でランダムな値を`size`分作成しています。これは、以下のようなジェネレータオブジェクトから生成されます。このように、ジェネレータを作成している理由として、乱数生成処理の高速化があるそうです。
 
 ```python
 self.rng = np.random.default_rng()
@@ -69,10 +69,10 @@ self.rng = np.random.default_rng()
 
 次に、ランダム値と、$Q$の最小値、最大値を用いてランダムな$Q$を定義しています。ゲイン$G$も$-12~12$の範囲でランダムな値を生成しています。
 
-その後、sos(second-order sections; 2次セクション型) IIRデジタルフィルターを波形データ`wav`に適用することで、データ拡張をしています。`params2sos`は、上記の`Peak Filter`などの係数をパラメータから計算する関数で、その係数を`sosfilt`関数で適用します。この処理に関しては、[`matlabのsosfilt`に関するドキュメント](https://jp.mathworks.com/help/signal/ref/sosfilt.html)が参考になります。
+その後、sos(second-order sections; 2次セクション型) IIRデジタルフィルターを波形データ`wav`に適用することで、データ拡張をしています。`params2sos`は、上記の`Peak Filter`などの係数をパラメータから計算する関数で、その係数を`sosfilt`関数で適用します。
 
-
-デジタル フィルターの設計を行う場合、伝達関数$H$を設計することなになります。この伝達関数を信号と掛け合わせることで、フィルタリングした結果を得ることができます。sosの場合、以下の行列のように、1行6列の係数で1つのフィルターを表現し、それが、$L$行、つまり、$L$個のフィルターに関する行列を作成し、さらに、下の式で、伝達関数$H$を表現しています。
+[`matlabのsosfilt`に関するドキュメント](https://jp.mathworks.com/help/signal/ref/sosfilt.html)を参考に説明します。
+デジタル フィルターの設計を行う場合、伝達関数$H$を設計することになになります。この伝達関数を信号と掛け合わせることで、イコライズした結果を得ることができます。sosは、以下の行列のように、1行6列の係数で1つのフィルターを表し、$L$行$（個）のフィルターに関する行列からなります。そして、この行列から、下の式で、伝達関数$H$を表現しています。
 
 $$
 \operatorname{sos}=\left[\begin{array}{cccccc}
