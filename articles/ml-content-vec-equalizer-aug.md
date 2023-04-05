@@ -9,7 +9,7 @@ publication_name: "fusic"
 
 こんにちは！[Fusic](https://fusic.co.jp/) 機械学習チームの鷲崎です。機械学習モデルの開発から運用までなんでもしています。もし、機械学習で困っていることがあれば、気軽に[お問い合わせ](https://fusic.co.jp/contact/)ください。[TwitterのDM](https://twitter.com/kwashizzz)でも大歓迎です！！
 
-最近、[so-vits-svc(SoftVC VITS Singing Voice Conversion)](https://github.com/svc-develop-team/so-vits-svc)という、性能の良いVoice Conversion (VC)が流行っている気がします。VCでは、入力音声から話者性を除去したコンテンツ情報の抽出が重要になります。コンテンツ情報に一貫性を持たせて、話者性を変更する際に、イコライザーによるデータ拡張も行うことがあります。このデータ拡張を実際試したところ、スペクトロうグラム上での見た目はかわりませんでしたが、実際聞いた際に、若干、声を張り上げているように変換されていたりしました。
+最近、[so-vits-svc(SoftVC VITS Singing Voice Conversion)](https://github.com/svc-develop-team/so-vits-svc)という、性能の良いVoice Conversion (VC)が流行っている気がします。VCでは、入力音声から話者性を除去したコンテンツ情報の抽出が重要になります。コンテンツ情報に一貫性を持たせて、話者性を変更する際に、イコライザーによるデータ拡張も行うことがあります。このデータ拡張を実際試したところ、スペクトログラム上での見た目はかわりませんでしたが、実際聞いた際に、若干、声を張り上げているように変換されていたりしました。
 
 本記事では、イコライザーを用いた音声データ拡張について実装の解説します。
 イコライザーの基礎に関しては、[エフェクターの基礎知識①：イコライザー＆フィルターの基礎を理解しよう！](https://kensukeinage.com/effector_eq_and_filter/) という記事がとても参考になりました。
