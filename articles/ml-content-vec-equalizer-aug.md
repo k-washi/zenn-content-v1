@@ -7,9 +7,9 @@ published: false # 公開設定（falseにすると下書き）
 publication_name: "fusic"
 ---
 
-こんにちは！[Fusic](https://fusic.co.jp/) 機械学習チームの鷲崎です。機械学習モデルの開発から運用までなんでもしてます。もし、機械学習で困っていることがあれば、気軽に[お問い合わせ](https://fusic.co.jp/contact/)ください。[TwitterのDM](https://twitter.com/kwashizzz)でもOKです！！
+こんにちは！[Fusic](https://fusic.co.jp/) 機械学習チームの鷲崎です。機械学習モデルの開発から運用までなんでもしています。もし、機械学習で困っていることがあれば、気軽に[お問い合わせ](https://fusic.co.jp/contact/)ください。[TwitterのDM](https://twitter.com/kwashizzz)でも大歓迎です！！
 
-最近、[so-vits-svc(SoftVC VITS Singing Voice Conversion)](https://github.com/svc-develop-team/so-vits-svc)という、性能の良いVoice Conversion (VC)が流行っている気がします。VCでは、入力音声から話者性を除去したコンテンツ情報の抽出が重要になります。コンテンツ情報に一貫性を持たせて、話者性を変更する際に、イコライザーによるデータ拡張も行うことがあります。このデータ拡張を実際試したところ、スペクトロうグラム上で見た場合の見た目はかわりませんでしたが、実際聞いた際に、若干、声を張り上げているように変換されていたりしました。
+最近、[so-vits-svc(SoftVC VITS Singing Voice Conversion)](https://github.com/svc-develop-team/so-vits-svc)という、性能の良いVoice Conversion (VC)が流行っている気がします。VCでは、入力音声から話者性を除去したコンテンツ情報の抽出が重要になります。コンテンツ情報に一貫性を持たせて、話者性を変更する際に、イコライザーによるデータ拡張も行うことがあります。このデータ拡張を実際試したところ、スペクトロうグラム上での見た目はかわりませんでしたが、実際聞いた際に、若干、声を張り上げているように変換されていたりしました。
 
 本記事では、イコライザーを用いた音声データ拡張について実装の解説します。
 イコライザーの基礎に関しては、[エフェクターの基礎知識①：イコライザー＆フィルターの基礎を理解しよう！](https://kensukeinage.com/effector_eq_and_filter/) という記事がとても参考になりました。
@@ -27,7 +27,9 @@ publication_name: "fusic"
 まず、単語の解説をします。
 
 音声からのコンテンツ抽出器と有名な[ContentVec](https://arxiv.org/abs/2204.09224)の学習で使用されたイコライザーのフィルターとして、`Peak Filter`, `High Shelf Filter`, `Low Shelf Filter`があります。
-`Peak Filter`は、指定した周波数を中心として、増幅や減少を行うフィルタです。`High Shelf Filter`は、指定した周波数以上の帯域にある信号の増幅や減少を行うフィルターです。`Low Shelf Filter`は、指定した周波数未満の帯域にある信号の増幅や減少を行うフィルターです。
+
+- `Peak Filter`は、指定した周波数を中心として、増幅や減少を行うフィルタです。
+`High Shelf Filter`は、指定した周波数以上の帯域にある信号の増幅や減少を行うフィルターです。`Low Shelf Filter`は、指定した周波数未満の帯域にある信号の増幅や減少を行うフィルターです。
 
 これらのフィルターを形成するパラメータとして、$F$, $G$, $Q$があります。$F$は、基準となる周波数です。$G$は、イコライザーによる周波数増減の強さです。$Q$は、基準周波数$F$を中心とした帯域幅です。
 
