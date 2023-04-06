@@ -3,7 +3,7 @@ title: "信号処理による話者性変換を用いた音声データ拡張" #
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
 topics: ["機械学習", "音声"] # タグ。["markdown", "rust", "aws"]のように指定する
-published: false # 公開設定（falseにすると下書き）
+published: true # 公開設定（falseにすると下書き）
 publication_name: "fusic"
 ---
 
@@ -35,8 +35,6 @@ def change_gender(x, fs, lo, hi, ratio_fs, ratio_ps, ratio_pr):
 
 ここで重要な部分は、`praat.call`で`Change gende`を実行している部分です。引数の詳細などは、[Sound: Change gender...](https://www.fon.hum.uva.nl/praat/manual/Sound__Change_gender___.html)を参考にしてください。ここで、ピッチを遷移させており、以下の式で計算されます。
 
-最終的なピッチは、以下の式で計算されます。
-
 `finalPitch = newPitchMedian + (pitch * newPitchMedian / oldPitchMedian - newPitchMedian) * pitchRangeScaleFactor`
 
 ここの、`oldPitchMedian`は、関数中で`to_pitch_ac`で`f0`を抽出し、`median`を取っている部分です。
@@ -44,8 +42,8 @@ def change_gender(x, fs, lo, hi, ratio_fs, ratio_ps, ratio_pr):
 `Change gende`の引数は、以下になります。
 
 - `ratio_fs`は、周波数の遷移割合を表しており、$1.1$にした場合、声が高くなり女性っぽい声になり、$1/1.1$に設定した場合は、声が低くなり男性っぽい声になります。
-- `f0_med*ratio_ps`は、新しいピッチの中央値（`newPitchMedian`）で、元の音声のF0の中央値を`ratio_ps`でスケールしており、`0`Hzで、オリジナルの音声と同じピッチになるとのことです。
-- `ratio_pr`は、以下の式の`pitchRangeScaleFactor`で、最終的なピッチを決定する際に、どの程度`newPtichMedian`を重要視するかというスケール値です。
+- `f0_med*ratio_ps`は、新しいピッチの中央値（`newPitchMedian`）で、元の音声のF0の中央値を`ratio_ps`でスケールさせており、`0`Hzで、オリジナルの音声と同じピッチになるとのことです。
+- `ratio_pr`は、上式の`pitchRangeScaleFactor`で、最終的なピッチを決定する際に、どの程度`newPtichMedian`を重要視するかというスケール値です。
 - 最後の引数$1$は、`Duration factor`で、時間方向のスケールを行うと時間ごとのコンテンツ情報が変化してしまうため、固定で1にしています。
 
 
@@ -56,7 +54,7 @@ def change_gender(x, fs, lo, hi, ratio_fs, ratio_ps, ratio_pr):
 
 音声波形`wav`と、その周波数、そして、`spk2info`から情報を抽出するための話者index`spk`が引数となっています。
 
-最小pitch`lo`と最大pitch`hi`の設定ですが、話者ごとに設定するのがベストです。しかし、作者にきいたところ、基本的には、男性と女性ごとに設定しており、男性の場合、`lo=50, hi=250`, 女性の場合、`lo=100, hi=400`としているとのことです。メソッドの中では、一部修正しており、男性の場合`lo=50`を$75$に変更しています。
+最小pitch`lo`と最大pitch`hi`の設定ですが、話者ごとに設定するのがベストです。しかし、作者にきいたところ、基本的には、男性、女性の属性ごとに設定しており、男性の場合、`lo=50, hi=250`, 女性の場合、`lo=100, hi=400`としているとのことです。メソッドの中では、一部修正しており、男性の場合`lo=50`を$75$に変更しています。
 
 `change_gender`の他の引数に関しては、ランダムに生成しています。
 
@@ -87,6 +85,8 @@ def change_gender(x, fs, lo, hi, ratio_fs, ratio_ps, ratio_pr):
         
         return ss
 ```
+
+このメソッドを用いることで、ランダムにピッチを変更し話者性を信号処理的にですが、変更できていました。
 
 # まとめ
 
