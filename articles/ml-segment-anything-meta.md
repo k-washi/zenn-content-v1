@@ -9,7 +9,7 @@ publication_name: "fusic"
 
 こんにちは！[Fusic](https://fusic.co.jp/) 機械学習チームの鷲崎です。機械学習モデルの開発から運用までなんでもしています。もし、機械学習で困っていることがあれば、気軽に[お問い合わせ](https://fusic.co.jp/contact/)ください。
 
-23/4/6、新しい画像セグメンテーションのモデルである、[Segment Anything Model(SAM)](https://segment-anything.com/)がMeta社から発表されました。
+新しい画像セグメンテーションのモデルである、[Segment Anything Model(SAM)](https://segment-anything.com/)がMeta社から発表されました(23/4)。
 
 使ってみたところ、分割しすぎな気がしますが、胴体やサンドバックなどうまく分離できています。サンドバックなどデータにほとんど含まれてなさそうですが、すごいです。後ほど解説しますが、プロンプトエンジニアリング次第では、より精度がよくなるかもしれません。
 
