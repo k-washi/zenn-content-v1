@@ -29,6 +29,7 @@ publication_name: "fusic"
 解説しませんが、コード([facebookresearch/segment-anything](https://github.com/facebookresearch/segment-anything))です。
 
 ※以下、解説記事の画像は、論文より引用しています。
+もし、間違いがありましたら、ご指摘のほどお願い致します。
 
 # 概要
 
