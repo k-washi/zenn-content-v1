@@ -2,7 +2,7 @@
 title: "OmniMotion - Tracking Everything Everywhere All at Once の解説" # 記事のタイトル
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
-topics: ["機械学習", "論文解説", "SAM"] # タグ。["markdown", "rust", "aws"]のように指定する
+topics: ["機械学習", "論文解説", "NeRF"] # タグ。["markdown", "rust", "aws"]のように指定する
 published: false # 公開設定（falseにすると下書き）
 publication_name: "fusic"
 ---
@@ -61,4 +61,20 @@ $, where \  \Tau_k = \prod_{l=1}^{k-1} \rm{exp}(-\sigma_l)$
 
 まずは、損失関数を、ざっと説明する。
 
-OmniMotion Representationで述べた、写像で得られる点から計算できるフロー$\hat{f}_{i \rightarrow l} = \hat{p}_j - p_i$と、入力であるモーション推定結果$f_{i \rightarrow l}$ の兵器絶対誤差
+OmniMotion Representationで述べた、写像で得られる点から計算できるフロー$\hat{f}_{i \rightarrow l} = \hat{p}_j - p_i$と、入力であるモーション推定結果フロー$f_{i \rightarrow l}$ の平均絶対誤差$L_{flo}$をフロー損失としている。
+加えて、予測した色と実際の色のphotometric loss $L_{pho}$、３次元空間上の軌跡を時間的に平滑化するための正則化項として、$i+1$と$i-1$における3次元点$x_{i+1}, x_{i-1}$と$i$番目のフレームにおける3次元点$x_i$を比較した3次元空間上の加速度を最小化する損失$L_{leg}$を用いる。
+
+
+$L_{leg} = \sum_{(i, p) \in \Omega_p} ||x_{i+1} + x_{i-1} - 2 x_i ||$
+
+しかし、これらの損失で学習したとしても、学習しやすい背景の動きを学習してしまい、動的な物体などの不確かさを含む物体の学習は、無視される事になってしまう。この問題に対処するため、学習時に困難な例をマイニングする、学習戦略として、予測フローと入力フローのユークリッド距離の差が大きい領域程、頻繁にサンプリングするようにしていた。
+
+# 評価
+
+評価用に長い動画の点追跡の性能評価用のベンチマーク[TAP-Vid: A Benchmark for Tracking Any Point in a Video](https://github.com/deepmind/tapnet) が用いられていた。とりあえず、ベンチマークに含まれる実動画、合成動画いずれにおいても、SoTAだった。
+
+下図（論文中Figure.3)からも、オクルージョンやズームが発生する長時間のピクセルの追跡を達成できていることがわかる。
+
+![](https://storage.googleapis.com/zenn-user-upload/6d7f54f552be-20230612.png)
+
+一方で、論文の結論に書かれているが、急速な非剛体的なモーションに苦戦していたとのこと。（これは、他の手法も同様 + そもそも、入力となるフロー情報が信頼できない）また、計算コストがかなりかかっているという欠点があると指摘されている。
