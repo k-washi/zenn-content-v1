@@ -12,7 +12,7 @@ publication_name: "fusic"
 本記事では、[Tracking Everything Everywhere All at Once](https://arxiv.org/abs/2306.05422) という論文で提案された、オプティカルフローのように、動画における各ピクセル間の軌跡を推定する新しい手法であるOmniMotoinについて解説します。
 まず、動画を見たほうがイメージがつくと思います。
 
-https://www.youtube.com/embed/KHoAG3gA024
+https://www.youtube.com/watch?v=KHoAG3gA024
 
 
 # 概要
