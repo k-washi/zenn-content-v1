@@ -89,9 +89,77 @@ $g = f^{-1} = f^{-1}_N \circ \dots \circ f^{-1}_1$
 
 ざっくりしたイメージですが、$f_i$で徐々に分布を変換していくのが、ノイズを除去していく拡散モデルに似ている気がしました！！
 
+## Continuous Normalizing Flow
+
+[Neural Ordinary Differential Equations (Neural ODE)](https://arxiv.org/abs/1806.07366) という論文で、連続時間化したNormalizing Flow を Continuous Normalizing Flow (CNF)と呼んでいました。
+
+Neural ODEでは、Residual Networkのように、残差を計算の結果を元の値に付加することで値を更新する方法に着目し、以下のように常微分方程式の式に似た概念を導入しています。
+
+$x_{t+1} = x_t + \frac{df(x)}{dt} = x_t + f(x, t)$
+
+この表現を用いる利点は、変化量の微分を表す単一のネットワークを使用すればよく、メモリの使用量を削減できます。加えて、逆変換の計算が可能で、RNNなど離散的な時間を扱うモデルとはことなり、連続時間を扱うことができます。
+
+※　これの特殊系が確率フローODEになります。
+
+**これを、CNFに発展させたものが以下になります。**
+
+このNeural ODEの考えで、Normalizing Flowを取り扱うと、以下のように、確率変数$x_0$から$x_1$の変化を、連続時間の変化量の積分で操作することができます。
+
+$x_1 = x_0 + \int^{t_1}_{t_0} f(x(t), t) dt$
+
+この微分は、$dx/dt = f(x(t), t)$で、どの時間$t$においても、$f(x(t), t)$という単一のネットワークで表現されています。
+
+また、この変換の逆変換も、以下のように書くことができます。
+
+$x_0 = x_1 + \int^{t_0}_{t_1} f(x(t), t) dt$
+
+上記のことから、拡散モデルの拡散過程と逆拡散過程に類似した表現をすると、拡散過程にあたるODEは、
+
+$dx = f(x, t) dt$
+
+となり、逆拡散過程にあたるODEは、
+
+$dx = -f(x, t) dt$
+
+のように表現できます。
+
+## なぜ、拡散モデルがよいとされているのか？
+
+拡散モデルのDDPMの損失は、以下になります。
+
+$\rm{E}_{t, q(z), p_t(x|z)} || s_{\theta}(t, x) - \nabla_x \rm{log} p_t(x|z)||^2_2$
+
+これから分かる通り、拡散モデルは、各時刻ごとの生成過程を独立で学習可能です。これは、複数のステップを繰り返すことで巨大な計算過程を学習でき、かつ、計算グラフの一部分を抜き出して学習できるという利点があります。このようなアプローチをSimulation Freeと呼びます。
+
+一方で、CNFの損失は、以下になります。
+
+$ \rm{E}_{q(x_1)} \lbrack \rm{log} p_0(x_0) - \int \rm{Tr}(\frac{\partial f}{\partial x_t}) dt \rbrack$
+
+見ての通りですが、全時刻に渡って積分した値を使用しており、計算グラフのすべてを使って学習が必要となる欠点があります。このようなアプローチは、Simulation based trainingと呼ばれます。これが原因で、学習効率が悪く、拡散モデルほど使用されていません。
+
 # Flow Matching
 
-CNFを安定して学習可能なFlow Matchingについて解説する。
+CNFを安定して学習可能なFlow Matchingについて解説します。
+上記のように、時間全体の学習が必要である点が、CNFの欠点と言えます。
+そこで、CNFを時刻ごとに、学習可能にするために、Flow Matchingが、開発されました。
+
+まず、微小時変ベクトル場$u$のODEは、以下になります。
+
+$dx = u_t (x) dt $
+
+$u_t(x)$は、$u(t, x)$と同様です。初期条件$\phi_0 (x) = x$のODEの解は、積分写像$\phi_t$となります。$\phi_t(x)$が時刻$0$から$t$までベクトル場$u$に沿って輸送される点$x$を表現しています。また、密度$p_t$は、時刻$0$から時刻$t$まで$u$に沿って輸送される点$x \sim p_0$の密度です。
+そして、時変密度$p_t$は、$\partial p / \partial t = - \nabla \cdot (p_t u_t)$と、初期条件$p_0$の条件下で、$p$は$u$による確率経路で、$u$は$p$の確率フローODEとなります。
+
+このとき、Flow Matchingは、ニューラルネットワーク$v_{\theta}(t, x)$が、時間依存のベクトル場$u_t(x)$に回帰するような損失を持ち、以下のようになります。
+
+$L_{FM}(\theta) = \rm{E}_{t\sim \mathcal{U}(0,1), x\sim p_t(x)} ||v_{\theta}(t, x) - u_t(x)||^2$
+
+[Flow Matching for Generative Modeling](https://openreview.net/forum?id=PqvMRDCJT9t) では、正規分布によるガウス確率経路$p_t(x) = \mathcal{N}(x | u_t, \sigma_t^2)$を考えています。それは、積分写像が$\phi_t(x) = \mu_t + \sigma_t x$を満たすとき、ベクトル場は、以下のようになるとしています。
+
+$u_t(x) = \frac{\sigma_t^{\prime}}{\sigma_t} (x - \mu_t) + \mu_t^{\prime}$
+
+よって、Flow Matchingにより、このベクトル場を回帰するように$v_{\theta}(t, x)$を学習することで、CNFの学習を安定して行えるようになりました。
+
 
 # Conditional Flow Matching
 
