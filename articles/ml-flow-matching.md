@@ -205,7 +205,7 @@ $\nabla \rm{L}_{CFM}(\theta) = \rm{L}_{FM}(\theta)$
 
 つまり、確率経路は、
 
-$p_t(x|z) = \mathcal{N}(x | tx_1, (t_{\sigma} - t + 1)^2)$
+$p_t(x|z) = \mathcal{N}(x | tx_1, (t \sigma - t + 1)^2)$
 
 となり、ベクトル場は、
 
@@ -220,24 +220,258 @@ $u_t(x|z) = \frac{x_1 - (1-\sigma)x}{1 - (1 - \sigma)t}$
 
 # Independet CFM
 
+CFMの基本形として、潜在変数$z$を、初期点$x_0$と、目標点$x_1$で同定し、$q(z) = q(x_0)q(x_1)$としたI-CFMを説明します。
+$x_0$と$x_1$の間の確率経路をガウス分布の移動と考えると、以下の確率経路になります。
+
+$p_t(x|z) = \mathcal{N}(x | tx_1 + (1 - t) x_0, \sigma^2)$
+
+そして、この確率経路の平均と分散をベクトル場の定式(flow matchingの項に記載)にあてはめると、ベクトル場は、
+
+$u_t(x|z) =  x1 - x0$
+
+となります。かなりシンプルな形式になっていますが、これにより$p_t(x|z)$は効率的にサンプリングでき、$u_t$は効率的に計算できるため、$\rm{L}_{CFM}$の勾配計算も効率的とのことです。
+
+下図は、論文中のFigure 1で、I-CFMのイメージです。固定の分散の分布が移動している事がわかります。これを見ると、拡散モデルと異なり、分布間の移動を行っているような気がしますね。そもそも、拡散モデルのようにノイズからノイズ除去で生成するより、特定の分布から生成したほうが効率良い気がします。どなんでしょうか...
+
+![](https://storage.googleapis.com/zenn-user-upload/c8b7ec11bd22-20231207.png)
+
+I-CFMのアルゴリズムは、以下になります。これだけ見ると、かなりシンプルですね。
+
+![](https://storage.googleapis.com/zenn-user-upload/d02dd2a714f5-20231207.png)
+
 # Optimal Transport CFM
 
-# Schrödinge Bridge CFM
+まず、2-Wasserstein距離による最適輸送(OT)に関して説明します。そして、OTを用いてCFMに関して説明します。
+
+## 2-Wasserstein距離
+
+最適輸送問題は、ある測度から別の測度へのマッピングを、コストが最小化するように求めるものである。論文では、2-Wasserstein距離を用いており、分布$q_0$と$q_1$の間のコスト$c(x, y) = ||x - y||$ を用いて、以下の式で表されます。
+
+
+$\mathcal{W}(q_0, q_1)^2_2 = \rm{inf} \int_{\mathcal{X}} c(x, y)^2 d \pi (x, y)$
+
+そして、2-Wassrstein距離の動的形式は、ある測度を他の測度に変換するベクトル場$u_t$上の最適化問題としても定義できます。
+
+$\mathcal{W}(q_0, q_1)^2_2 = \rm{inf} \int_{\rm{R}^d} \int^{1}_{0} p_t(x) ||u_t(x)||^2 dt dx$
+
+L2正則化を持つCNFが動的最適輸送に近似可能なことは証明されていますが、この式の計算には、多くの積分とバックプロパゲーションが必要なため数値的にも、効率的にも問題がありました。そこで、CFMとして、直接ベクトル場を回帰することで、これらの問題を回避することが提案されました。
+
+## OT-CFM
+
+上記の2-Wasserstein距離をCFMに当てはめるため、2-Wasserstein最適輸送写像$\pi$を$q(z)$とすることが提案されました。
+
+$q(z) := \pi (x_0, x_1)$
+
+これにより、$q_0$, $q_1$から、独立にサンプリングしていた$x_0$, $x_1$を、最適輸送写像によって、同時にサンプリングします。
+I-CFMに対して、この修正を行ったものが、OT-CFMになります。
+
+論文では、
+
+>OT-CFMは、$q(x_0)$と$q(x_1)$の間の静的OT写像と中間時間ステップで条件付きフローの回帰のみを用いて、シミュレーションフリー（時間ごとに学習可能）な動的OT問題を解いた最初の手法である。
+
+とのことです。
+
+下図は、論文中のFigure 1で、OT-CFMのイメージです。I-CFMと異なり、時刻$0$から$1$の分布の移動がOTのおかげでスムーズに見えます。
+
+![](https://storage.googleapis.com/zenn-user-upload/671c2e40a4e3-20231207.png)
+
+実際、論文中の実験では、下図のようにより効率的な分布の移動ができています。下図は、moonから9つのガウス分布の生成を行っていますが、左側のI-CFMより、右側のOT-CFMが明らかにシンプルな遷移を行っています。
 
 ![](https://storage.googleapis.com/zenn-user-upload/7ed690f1dc10-20231207.png)
 
-![](https://storage.googleapis.com/zenn-user-upload/c8b7ec11bd22-20231207.png)
-![](https://storage.googleapis.com/zenn-user-upload/671c2e40a4e3-20231207.png)
+下図は、OT-CFMのアルゴリズムを示しています。
+
+アルゴリズム中にOTのミニバッチ近似が出てきます。大きなデータセットにおいて、OTにおける輸送計画$\pi$の計算と保存は、困難な場合があり、OTのミニバッチ近似を使用するのが実用的です。実際、正確なOTの解に対して誤差が生じますが、多くのアプリケーションに適応可能になります。
+
+実際アルゴリズムを見ると、変わったところは、OTの部分くらいかと思います。
+
 ![](https://storage.googleapis.com/zenn-user-upload/7c7d8cd1eec4-20231207.png)
 
-![](https://storage.googleapis.com/zenn-user-upload/d1b0965ec0d2-20231207.png)
-![](https://storage.googleapis.com/zenn-user-upload/86fc1ad56589-20231207.png)
-![](https://storage.googleapis.com/zenn-user-upload/d02dd2a714f5-20231207.png)
 
+
+# Schrödinge Bridge CFM
+
+論文中には、シュレディンガーBridge(SB)によるCFMもでてきます。勝手なイメージですが、I-CFMとOT-CFMの中間に当たるイメージを持っていますが、理論が複雑で説明が難しいので省きます。ぱっとみ、SB-CFMより、OT-CFMのほうが精度が良さそうでした。ただ、[Schrodinger Bridges Beat Diffusion Models on Text-to-Speech Synthesis](https://huggingface.co/papers/2312.03491)という論文もでていたので、次回の記事を書く際にしっかり理解したいと思います。（誰か書いて！！）
+
+ちなみにですが、Schrödinge Bridgeに関しては、以下の記事がとても参考になりました。すごく良い記事です！
+
+- [Morpho Tech log - A Brief Survey of Schrödinger Bridge (Part I)](https://techblog.morphoinc.com/entry/2023/09/12/100000)
+
+# 比較
+
+最後に比較結果です。
+下図は、分布の適合度（一致度？）を示した2-Wasserstein $\mathcal{W}^2_2$と、最適輸送性能(Normalized Path Energy)で最適輸送性能を比較したものです。値が小さいほど性能がよいです。OT-CFMは、$\mathcal{W}^2_2$もNPEも、良さそうです。
+
+
+![](https://storage.googleapis.com/zenn-user-upload/d1b0965ec0d2-20231207.png)
+
+また、下図の左より、学習時の検証セットに対する誤差の収束も早いことがわかります。
+
+![](https://storage.googleapis.com/zenn-user-upload/86fc1ad56589-20231207.png)
+
+# プログラム上でどう記載するのか？
+
+理論ばかり書いても、まぁわからないので、いくつか実装例を見てみましょう。
+
+まずは、CFMを使用している音声合成モデルである[Matcha-TTS](https://github.com/shivammehta25/Matcha-TTS/blob/main/matcha/models/components/flow_matching.py)です。ここでは、$x_1$が目標となるデータで、エンコーダの出力であるメルスペクトログラム$mu$をflow matchingでいい感じに変換し$x_1$に近づけるため、$mu$という引数があります。
+
+実装を見ると、ランダムな$z$をサンプリングしていますが、I-CFNという認識でよいのでしょうか。（ただ、[他のCFMの実装](https://github.com/atong01/conditional-flow-matching/blob/21cd0c888186f6e2b76deb393800361b8a850e9b/examples/cifar10/train_cifar10.py#L147C13-L147C13)の初期値も同様になっていました。）また、気になる点としては、確率経路の平均を計算する部分と、ベクトル場を計算する部分に、`sigma_min`が入っています。ただ、この値は、かなり小さい($1e^{-4}$)とかなので、無視しても良いかもしれませんが、実装上必要なのでしょうかね...　([他の実装](https://github.com/atong01/conditional-flow-matching/blob/main/runner/configs/model/otcfm.yaml)では、$0.1$など割りと大きめの値が設定されている場合がありました。)
+
+また、確率経路から、データ$x$をサンプルしていたはずですが、ここでは計算せず、直接ニューラルネットワークに入力しています。こちらも実装ならではなのかなという気がします。
+
+```python:https://github.com/shivammehta25/Matcha-TTS/blob/c8d0d60f87147fe340f4627b84588e812e5fbb00/matcha/models/components/flow_matching.py#L89C5-L120C23
+def compute_loss(self, x1, mask, mu, spks=None, cond=None):
+        """Computes diffusion loss
+
+        Args:
+            x1 (torch.Tensor): Target
+                shape: (batch_size, n_feats, mel_timesteps)
+            mask (torch.Tensor): target mask
+                shape: (batch_size, 1, mel_timesteps)
+            mu (torch.Tensor): output of encoder
+                shape: (batch_size, n_feats, mel_timesteps)
+            spks (torch.Tensor, optional): speaker embedding. Defaults to None.
+                shape: (batch_size, spk_emb_dim)
+
+        Returns:
+            loss: conditional flow matching loss
+            y: conditional flow
+                shape: (batch_size, n_feats, mel_timesteps)
+        """
+        b, _, t = mu.shape
+
+        # random timestep
+        t = torch.rand([b, 1, 1], device=mu.device, dtype=mu.dtype)
+        # sample noise p(x_0)
+        x0 = torch.randn_like(x1)
+
+        # 確率経路の平均計算
+        y = (1 - (1 - self.sigma_min) * t) * x0 + t * x1
+        
+        # ベクトル場の計算
+        u = x1 - (1 - self.sigma_min) * x0
+
+        loss = F.mse_loss(self.estimator(y, mask, mu, t.squeeze(), spks), u, reduction="sum") / (
+            torch.sum(mask) * u.shape[1]
+        )
+        return loss, y
+```
+
+これを、OT-CFMに改造してみましょう。実際動作させていないですが、おそらく以下のようになると思います。最適輸送には、[POT: Python Optimal Transport](https://pythonot.github.io/)というライブラリを使用します。
+
+```python
+from functools import partial
+import ot as pot
+
+class OTCFM()
+    def __init__(self, ot_method):
+        if ot_method == "exact":
+            self.ot_fn = pot.emd
+        elif ot_method == "sinkhorn":
+            self.ot_fn = partial(pot.sinkhorn, reg=reg)
+        elif ot_method == "unbalanced":
+            self.ot_fn = partial(pot.unbalanced.sinkhorn_knopp_unbalanced, reg=reg, reg_m=reg_m)
+        elif ot_method == "partial":
+            self.ot_fn = partial(pot.partial.entropic_partial_wasserstein, reg=reg)
+
+    def get_map(self, x0, x1):
+        """Compute the OT plan (wrt squared Euclidean cost) between a source and a target
+        minibatch.
+
+        Parameters
+        ----------
+        x0 : Tensor, shape (bs, *dim)
+            represents the source minibatch
+        x1 : Tensor, shape (bs, *dim)
+            represents the source minibatch
+
+        Returns
+        -------
+        p : numpy array, shape (bs, bs)
+            represents the OT plan between minibatches
+        """
+        a, b = pot.unif(x0.shape[0]), pot.unif(x1.shape[0])
+        if x0.dim() > 2:
+            x0 = x0.reshape(x0.shape[0], -1)
+        if x1.dim() > 2:
+            x1 = x1.reshape(x1.shape[0], -1)
+        x1 = x1.reshape(x1.shape[0], -1)
+        M = torch.cdist(x0, x1) ** 2
+        if self.normalize_cost:
+            M = M / M.max()  # should not be normalized when using minibatches
+        p = self.ot_fn(a, b, M.detach().cpu().numpy())
+        return p
+    def sample_map(self, pi, batch_size):
+        r"""Draw source and target samples from pi  $(x,z) \sim \pi$
+
+        Parameters
+        ----------
+        pi : numpy array, shape (bs, bs)
+            represents the source minibatch
+        batch_size : int
+            represents the OT plan between minibatches
+
+        Returns
+        -------
+        (i_s, i_j) : tuple of numpy arrays, shape (bs, bs)
+            represents the indices of source and target data samples from $\pi$
+        """
+        p = pi.flatten()
+        p = p / p.sum()
+        choices = np.random.choice(pi.shape[0] * pi.shape[1], p=p, size=batch_size)
+        return np.divmod(choices, pi.shape[1])
+
+    def compute_loss(self, x1, mask, mu, spks=None, cond=None):
+        """Computes diffusion loss
+
+        Args:
+            x1 (torch.Tensor): Target
+                shape: (batch_size, n_feats, mel_timesteps)
+            mask (torch.Tensor): target mask
+                shape: (batch_size, 1, mel_timesteps)
+            mu (torch.Tensor): output of encoder
+                shape: (batch_size, n_feats, mel_timesteps)
+            spks (torch.Tensor, optional): speaker embedding. Defaults to None.
+                shape: (batch_size, spk_emb_dim)
+
+        Returns:
+            loss: conditional flow matching loss
+            y: conditional flow
+                shape: (batch_size, n_feats, mel_timesteps)
+        """
+        b, _, t = mu.shape
+
+        # random timestep
+        t = torch.rand([b, 1, 1], device=mu.device, dtype=mu.dtype)
+        # sample noise p(x_0)
+        x0 = torch.randn_like(x1)
+        
+        # OTを用いて、x0, x1をサンプル
+        pi = self.get_map(x0, x1)
+        i_arr, j_arr = self.sample_map(pi, x0.shape[0])
+        x0, x1 = x0[i_arr], x1[j_arr]
+
+        y = (1 - (1 - self.sigma_min) * t) * x0 + t * x1
+        u = x1 - (1 - self.sigma_min) * x0
+
+        loss = F.mse_loss(self.estimator(y, mask, mu, t.squeeze(), spks), u, reduction="sum") / (
+            torch.sum(mask) * u.shape[1]
+        )
+        return loss, y
+```
+
+# 最後に
+
+今回は、Flow Matchingをより効率的にした、OT-CFMについて解説しました。個人的に、数式が多く難しいな～と思いながらも、今後使える技術だと思い、記事にしてみました。この記事で、Flow Matchingの理解の手助けになればと思います。
+
+今後は、シュレディンガーBridgeに関する記事か、実際にOT-CFMを使用した音声合成などの記事を作成できればと思っています。
+
+---
+
+最後に宣伝になりますが、機械学習でビジネスの成長を加速するために、[Fusic](https://fusic.co.jp/)の機械学習チームがお手伝いしています。機械学習のPoCから運用まで、すべての場面でサポートした実績があります。もし、困っている方がいましたら、ぜひ[Fusic](https://fusic.co.jp/)にご相談ください。[お問い合わせ](https://fusic.co.jp/contact/)から気軽にご連絡いただけますが、[TwitterのDM](https://twitter.com/kwashizzz)からでも大歓迎です！
 
 
 # 参考文献
 - [Normalizing Flow入門 第1回 変分推論](https://tatsy.github.io/blog/posts/2020/2020-12-30-normalizing_flow%E5%85%A5%E9%96%80_%E7%AC%AC1%E5%9B%9E/)
 - [Normalizing Flow入門 第2回 Planar Flow](https://tatsy.github.io/blog/posts/2021/2021-01-03-normalizing_flow%E5%85%A5%E9%96%80_%E7%AC%AC2%E5%9B%9E/)
 - [Normalizing Flow入門 第7回 Neural ODEとFFJORD](https://tatsy.github.io/blog/posts/2021/2021-01-11-normalizing_flow%E5%85%A5%E9%96%80_%E7%AC%AC7%E5%9B%9E/)
-- [Morpho Tech log - A Brief Survey of Schrödinger Bridge (Part I)](https://techblog.morphoinc.com/entry/2023/09/12/100000)
