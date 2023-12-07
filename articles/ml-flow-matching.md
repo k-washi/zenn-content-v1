@@ -9,9 +9,12 @@ publication_name: "fusic"
 
 こんにちは！[Fusic](https://fusic.co.jp/) 機械学習チームの鷲崎です。最近、音声や言語処理に興味がありますが、機械学習モデルの開発から運用までなんでもしています。もし、機械学習で困っていることがあれば、気軽に[DM](https://twitter.com/kwashizzz)ください。
 
-本記事では、Flow Matching (FM)と、その発展版であるOptimal Transport Confitional Flow Matching (OT-CFM)を解説します。最近の生成AIでは、拡散モデルがよく使用されていますが、Flow Matchingは、拡散モデルに取って代わる可能性がある生成技術と考えています。
+本記事では、Flow Matching (FM)と、その発展版であるOptimal Transport Conditional Flow Matching (OT-CFM)を解説します。最近の生成AIでは、拡散モデルがよく使用されていますが、Flow Matchingは、拡散モデルに取って代わる可能性がある生成技術と考えています。
 
-実際、音声合成界隈では、Metaが発表した音声合成手法である[Voicebox](https://voicebox.metademolab.com/)や、より高速で高性能な音声合成手法である[Matcha-TTS](https://arxiv.org/abs/2309.03199)に使用されてきています。
+おもに、[Improving and Generalizing Flow-Based Generative Models with Minibatch
+Optimal Transport](https://arxiv.org/abs/2302.00482)という論文を参考に解説していきたいと思います。また、本記事の図は、この論文から参照いたしました。
+
+Flow Matachingは、音声合成界隈では、Metaが発表した音声合成手法である[Voicebox](https://voicebox.metademolab.com/)や、より高速で高性能な音声合成手法である[Matcha-TTS](https://arxiv.org/abs/2309.03199)に使用されてきています。
 Matcha-TTSに関しては、弊社のToshikiが、記事を書いているので、ぜひ、読んでみてください。
 
 [【音声合成】Matcha-TTS🍵で日本語音声を生成してみる](https://zenn.dev/fusic/articles/bd7da12adf5901)
@@ -20,7 +23,7 @@ Matcha-TTSに関しては、弊社のToshikiが、記事を書いているので
 数年前に拡散モデルとは別に、Normalize Flowという手法が流行った気がします。その、Normalize Flowの発展版と考えるとスムーズに納得できました。
 そこで、本記事では、参考になる記事などを示しつつ、拡散モデルとNormalize Flowの関係性からFlow Matchingまでの過程を解説していきたいと思います。
 
-理解が及ばなかった部分がたたあるため、ご指摘をたくさんいただけると嬉しいです。よろしくお願いいたします。
+理解が及ばなかった部分が多々あるため、ご指摘をたくさんいただけると嬉しいです。よろしくお願いいたします。
 
 # 基礎
 
@@ -158,18 +161,78 @@ $L_{FM}(\theta) = \rm{E}_{t\sim \mathcal{U}(0,1), x\sim p_t(x)} ||v_{\theta}(t, 
 
 $u_t(x) = \frac{\sigma_t^{\prime}}{\sigma_t} (x - \mu_t) + \mu_t^{\prime}$
 
-よって、Flow Matchingにより、このベクトル場を回帰するように$v_{\theta}(t, x)$を学習することで、CNFの学習を安定して行えるようになりました。
+Flow Matchingにより、このベクトル場を回帰するように$v_{\theta}(t, x)$を学習することで、CNFの学習を安定して行えるようになりました。
 
 
 # Conditional Flow Matching
 
-Flow matchingは、ガウス確率経路を仮定しているため、2つの分布間の条件付き確率経路を定式化し、ガウス確率経路である仮定を緩和するよう修正したConditional Flow Mataching (CFM)について解説する。
+Flow matchingは、ガウス確率経路を仮定していました。そこで、ガウス分布の仮定を緩和し、2つの分布間の条件付き確率経路(ODE Bridge)の学習を可能にした、Conditional Flow Mataching (CFM)が提案されました。
+
+潜在条件変数$z$において、潜在変数による分布$q(z)$と確率経路$p_t(x|z)$による周辺確率経路$p_t(x)$は、以下の式となります。
+
+$p_t(x) = \int p_t(x|z)q(z)dz$
+
+もし、初期条件分布$p_0 (x|z)$からベクトル場$u_t(x|z)$によって確率経路$p_t(x|z)$が生成されるとすると、周辺ベクトル場$u_t(x)$は、
+
+$u_t(x) := \rm{E}_{q(z)} \frac{u_t(x|z)p_t(x|z)}{p_t(x)}$
+
+となる。そして、周辺ベクトル場$u_t(x)$によって、初期条件$p_0(x)$から周辺確率経路$p_t(x)$が生成されます。
+そのため、条件付き確率経路$p_t(x|z)$とベクトル場$u_t(x|x)$から$u_t$を計算したいが、分母の$p_t(x)$の計算は積分を含み困難です。
+
+そこで、CFMの損失を
+
+$\rm{L}_{CFM}(\theta) = \rm{E}_{t, q(z), p_t(x|z)} ||v_{\theta}(t, x) - u_t(x|z)||^2$
+
+としたとき、特定の条件下で、
+
+$\nabla \rm{L}_{CFM}(\theta) = \rm{L}_{FM}(\theta)$
+
+であることが論文で示されました。
+つまり、条件付きベクトル場$u_t(x|z)$を計算できるなら、周辺ベクトル$u_t(x)$に回帰するニューラルネット$v_{\theta}$を学習できることを示しました。
+
+これをCNFとし、以下のアルゴリズム(論文中 Algorithm 1)で計算されます。
+
+![](https://storage.googleapis.com/zenn-user-upload/eebf91be8324-20231207.png)
+
+
+これより下の項目では、$q(z)$, $p_t(-, z)$, $u_t(-|z)$によって定義される様々なCFMについて説明します。
+
+
+# Flow Matching from a Gauusian
+
+[Flow Matching for Generative Modeling](https://openreview.net/forum?id=PqvMRDCJT9t) で説明されたFlow MatchingをCFMの特殊なケースとしての解釈を説明します。
+この論文では、$z = x_1$とし、標準正規分布$p_0(x|z) = \mathcal{N}(x; 0, 1)$から、$p_1(x|z) = \mathcal{N}(x; x_1, \sigma^2)$への確率経路と設定しています。
+
+つまり、確率経路は、
+
+$p_t(x|z) = \mathcal{N}(x | tx_1, (t_{\sigma} - t + 1)^2)$
+
+となり、ベクトル場は、
+
+$u_t(x|z) = \frac{x_1 - (1-\sigma)x}{1 - (1 - \sigma)t}$
+
+となります。
+
+下図は、論文中のFigure 1で、Flow Matchingのイメージです。ガウス分布がデータサンプルへ分散を小さくしながら遷移している確率経路が見えますね。
+
+![](https://storage.googleapis.com/zenn-user-upload/6e79e34c8494-20231207.png)
+
 
 # Independet CFM
 
 # Optimal Transport CFM
 
 # Schrödinge Bridge CFM
+
+![](https://storage.googleapis.com/zenn-user-upload/7ed690f1dc10-20231207.png)
+
+![](https://storage.googleapis.com/zenn-user-upload/c8b7ec11bd22-20231207.png)
+![](https://storage.googleapis.com/zenn-user-upload/671c2e40a4e3-20231207.png)
+![](https://storage.googleapis.com/zenn-user-upload/7c7d8cd1eec4-20231207.png)
+
+![](https://storage.googleapis.com/zenn-user-upload/d1b0965ec0d2-20231207.png)
+![](https://storage.googleapis.com/zenn-user-upload/86fc1ad56589-20231207.png)
+![](https://storage.googleapis.com/zenn-user-upload/d02dd2a714f5-20231207.png)
 
 
 
