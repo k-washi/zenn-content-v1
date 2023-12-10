@@ -135,7 +135,7 @@ $\rm{E}_{t, q(z), p_t(x|z)} || s_{\theta}(t, x) - \nabla_x \rm{log} p_t(x|z)||^2
 
 一方で、CNFの損失は、以下になります。
 
-$ \rm{E}_{q(x_1)} [ \rm{log} p_0(x_0) - \int \rm{Tr}(\frac{\partial f}{\partial x_t}) dt]$
+$\rm{E}_{q(x_1)} [ \rm{log} p_0(x_0) - \int \rm{Tr}(\frac{\partial f}{\partial x_t}) dt]$
 
 見ての通りですが、全時刻に渡って積分した値を使用しており、計算グラフのすべてを使って学習が必要となる欠点があります。このようなアプローチは、Simulation based trainingと呼ばれます。これが原因で、学習効率が悪く、拡散モデルほど使用されていません。
 
