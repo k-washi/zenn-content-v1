@@ -1,8 +1,8 @@
 ---
-title: "Flow Matching - 拡散モデルにかわる生成技術" # 記事のタイトル
+title: "Optimal Transport Conditional Flow Matching - 拡散モデルに取って代わる次世代の生成技術？" # 記事のタイトル
 emoji: "😸" # アイキャッチとして使われる絵文字（1文字だけ）
 type: "tech" # tech: 技術記事 / idea: アイデア記事
-topics: ["機械学習", "論文解説", "Diffusion", "FlowMatching"] # タグ。["markdown", "rust", "aws"]のように指定する
+topics: ["機械学習", "論文解説", "拡散モデル", "FlowMatching"] # タグ。["markdown", "rust", "aws"]のように指定する
 published: false # 公開設定（falseにすると下書き）
 publication_name: "fusic"
 ---
@@ -20,17 +20,17 @@ Matcha-TTSに関しては、弊社のToshikiが、記事を書いているので
 [【音声合成】Matcha-TTS🍵で日本語音声を生成してみる](https://zenn.dev/fusic/articles/bd7da12adf5901)
 
 個人的に、Flow Matchingは、拡散モデルが発展した手法と考えて論文を読み始めたのですが、それだとかなり勘違いしてしまっていました。
-数年前に拡散モデルとは別に、Normalize Flowという手法が流行った気がします。その、Normalize Flowの発展版と考えるとスムーズに納得できました。
-そこで、本記事では、参考になる記事などを示しつつ、拡散モデルとNormalize Flowの関係性からFlow Matchingまでの過程を解説していきたいと思います。
+皆さん、Normalize Flowという手法を聞いたことがありますでしょうか？現在、拡散モデルがバズワード化しすぎて、あまり耳にしないかもしれませんが、分布を変換する関数を学習するとてもおもしろいモデルです。そのNormalize Flowの発展版がFlow Matchingと考えるとスムーズに納得できた気がします。
+そこで、本記事では、拡散モデルとNormalize Flowの関係性からFlow Matchingまでの過程とその発展を解説していきたいと思います。
 
 理解が及ばなかった部分が多々あるため、ご指摘をたくさんいただけると嬉しいです。よろしくお願いいたします。
 
 # 基礎
 
-Flow Matchingを理解するために、拡散モデルの拡散過程を連続時間化した、確率微分方程式(SDE)を説明します。
-そして、それを常微分方程式(ODE)にに変換した確率フローODEを説明します。
+Flow Matchingを理解するために、まず、拡散モデルの拡散過程を連続時間化した、確率微分方程式(SDE)を説明します。
+そして、それを常微分方程式(ODE)に変換した確率フローODEを説明します。
 
-その後、確率フローODEが論文で解説されているNormalize Flow (NF)を連続化したContinuous Normalize Flow (CNF)と、どのように関連するか説明します。
+その後、確率フローODEが、Normalize Flow (NF)を連続化したContinuous Normalize Flow (CNF)と、どのように関連するか説明します。
 
 SDEとODEの詳細に関しては、[拡散モデル データ生成技術の数理](https://www.amazon.co.jp/dp/400006343X)という本を読んでください。
 
