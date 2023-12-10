@@ -47,9 +47,9 @@ $dx$はデータ$x$の微小時間あたりの変化量です。この変化量�
 
 一方で、逆拡散過程は、以下のSDEで与えられます。
 
-$dx = f(x, t) -  (t)  (x) dt + g(t) d $
+$dx = f(x, t) -  (t)  (x) dt + g(t) d$
 
-$dx = [ f(x, t) - g^2(t) \nabla_x \rm{log} p_t (x) ] dt + g(t) d \bar{w} $
+$dx = [ f(x, t) - g^2(t) \nabla_x \rm{log} p_t (x) ] dt + g(t) d \bar{w}$
 
 時刻$t$のスコア$\nabla_x \rm{log} p_t (x)$が、わかりさえすれば、事前分布$p_T(x)$から、データ分布$p_0(x)$への変換経路を求めることができます。
 
