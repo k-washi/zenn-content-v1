@@ -47,8 +47,6 @@ $dx$はデータ$x$の微小時間あたりの変化量です。この変化量�
 
 一方で、逆拡散過程は、以下のSDEで与えられます。
 
-$dx = f(x, t) -  (t)  (x) dt + g(t) d$
-
 $dx = [ f(x, t) - g^2(t) \nabla_x \rm{log} p_t (x) ] dt + g(t) d \bar{w}$
 
 時刻$t$のスコア$\nabla_x \rm{log} p_t (x)$が、わかりさえすれば、事前分布$p_T(x)$から、データ分布$p_0(x)$への変換経路を求めることができます。
@@ -57,7 +55,7 @@ $dx = [ f(x, t) - g^2(t) \nabla_x \rm{log} p_t (x) ] dt + g(t) d \bar{w}$
 
 元のDDPMの式は、以下です。
 
-$x_{t+1} = \sqrt{1 - \beta_{t}}x_{i-1} + \sqrt{\beta_i} z_{i-1}  $
+$x_{t+1} = \sqrt{1 - \beta_{t}}x_{i-1} + \sqrt{\beta_i} z_{i-1}$
 
 この式を、SDEにしたDDPMの式は以下です。
 
@@ -137,7 +135,7 @@ $\rm{E}_{t, q(z), p_t(x|z)} || s_{\theta}(t, x) - \nabla_x \rm{log} p_t(x|z)||^2
 
 一方で、CNFの損失は、以下になります。
 
-$ \rm{E}_{q(x_1)} \lbrack \rm{log} p_0(x_0) - \int \rm{Tr}(\frac{\partial f}{\partial x_t}) dt \rbrack$
+$ \rm{E}_{q(x_1)} [ \rm{log} p_0(x_0) - \int \rm{Tr}(\frac{\partial f}{\partial x_t}) dt]$
 
 見ての通りですが、全時刻に渡って積分した値を使用しており、計算グラフのすべてを使って学習が必要となる欠点があります。このようなアプローチは、Simulation based trainingと呼ばれます。これが原因で、学習効率が悪く、拡散モデルほど使用されていません。
 
