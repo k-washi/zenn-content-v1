@@ -104,18 +104,17 @@ $x_{t+1} = x_t + \frac{df(x)}{dt} = x_t + f(x, t)$
 
 $x_1 = x_0 + \int^{t_1}_{t_0} f(x(t), t) dt$
 
-この式は、確率変数$x_0$から$x_1$の変化を、連続時間の変化量の積分で操作することができます。
-また、微分$dx/dt = f(x(t), t)$で、どの時間$t$においても、$f(x(t), t)$という単一のネットワークで表現されています。
+この式は、確率変数$x_0$から$x_1$の変化を、連続時間の変化量の積分で操作することができます。また、微分$dx/dt = f(x(t), t)$は、どの時間$t$においても、$f(x(t), t)$という単一のネットワークで表現されています。
 
 また、この変換の逆変換も、以下のように書くことができます。
 
 $x_0 = x_1 + \int^{t_0}_{t_1} f(x(t), t) dt$
 
-上記のことから、拡散モデルの拡散過程と逆拡散過程に類似した表現をすると、拡散過程にあたるCNFは、
+上記のことから、拡散モデルの拡散過程と逆拡散過程に類似した表現をすると、拡散過程にあたるCNFでは、
 
 $dx = f(x, t) dt$
 
-となり、逆拡散過程にあたるCNFは、
+となり、逆拡散過程にあたるCNFでは、
 
 $dx = -f(x, t) dt$
 
@@ -127,34 +126,40 @@ $dx = -f(x, t) dt$
 
 $\rm{E}_{t, q(z), p_t(x|z)} || s_{\theta}(t, x) - \nabla_x \rm{log} p_t(x|z)||^2_2$
 
-これから分かる通り、拡散モデルは、各時刻ごとの生成過程を独立で学習可能です。これは、複数のステップを繰り返すことで巨大な計算過程を学習でき、かつ、計算グラフの一部分を抜き出して学習できるという利点があります。このようなアプローチをSimulation Freeと呼びます。
+この式の意味は説明しませんが、拡散モデルでは各時刻$t$ごとの生成過程を独立で学習可能であることがわかります。これは、複数のステップを繰り返すことで巨大な計算過程を学習でき、かつ、計算グラフの一部分を抜き出して学習できるという利点があります。このようなアプローチをSimulation Freeと呼びます。
 
 一方で、CNFの損失は、以下になります。
 
 $\rm{E}_{q(x_1)} [ \rm{log} p_0(x_0) - \int \rm{Tr}(\frac{\partial f}{\partial x_t}) dt]$
 
-見ての通りですが、全時刻に渡って積分した値を使用しており、計算グラフのすべてを使って学習が必要となる欠点があります。このようなアプローチは、Simulation based trainingと呼ばれます。これが原因で、学習効率が悪く、拡散モデルほど使用されていません。
+見ての通り、全時刻に渡って積分した値を使用しており、計算グラフのすべてを使って学習が必要となる欠点があります。このようなアプローチは、Simulation based trainingと呼ばれます。これが原因で、学習効率が悪く、拡散モデルほど使用されていませんでした。
+
+そこで、CNFの学習を改善したFlow Matchingが開発されました！
 
 # Flow Matching
 
-CNFを安定して学習可能なFlow Matchingについて解説します。
-上記のように、時間全体の学習が必要である点が、CNFの欠点と言えます。
-そこで、CNFを時刻ごとに、学習可能にするために、Flow Matchingが、開発されました。
+CNFを安定して学習可能なFlow Matchingについて解説します。上記のように、時間全体の学習が必要である点が、CNFの欠点と言えます。そこで、CNFを時刻ごとに、学習可能にするために、Flow Matchingが、開発されました。
 
 まず、微小時変ベクトル場$u$のODEは、以下になります。
 
-$dx = u_t (x) dt $
+$dx = u_t (x) dt$
 
-$u_t(x)$は、$u(t, x)$と同様です。初期条件$\phi_0 (x) = x$のODEの解は、積分写像$\phi_t$となります。$\phi_t(x)$が時刻$0$から$t$までベクトル場$u$に沿って輸送される点$x$を表現しています。また、密度$p_t$は、時刻$0$から時刻$t$まで$u$に沿って輸送される点$x \sim p_0$の密度です。
-そして、時変密度$p_t$は、$\partial p / \partial t = - \nabla \cdot (p_t u_t)$と、初期条件$p_0$の条件下で、$p$は$u$による確率経路で、$u$は$p$の確率フローODEとなります。
+$u_t(x)$は、$u(t, x)$と同様です。
 
-このとき、Flow Matchingは、ニューラルネットワーク$v_{\theta}(t, x)$が、時間依存のベクトル場$u_t(x)$に回帰するような損失を持ち、以下のようになります。
+また、密度$p_t$は、時刻$0$から時刻$t$まで$u$に沿って輸送される点$x$ ($x \sim p_0$)の密度です。
+このとき、時変密度$p_t$が$\partial p / \partial t = - \nabla \cdot (p_t u_t)$であるとき、$p$は$u$による確率経路で、$u$は$p$の確率フローODEとなります。
 
-$L_{FM}(\theta) = \rm{E}_{t\sim \mathcal{U}(0,1), x\sim p_t(x)} ||v_{\theta}(t, x) - u_t(x)||^2$
+かなり説明を省いていますので、詳細は論文を読んでいただきたいのですが、個人的に確率経路$p$は、初期条件の分布からデータまでの分布の道のりを表現しており、ベクトル場$u$は、各時刻$t$において分布が移動する方向と距離を表現しているとイメージしています！なんとなくです...
 
-[Flow Matching for Generative Modeling](https://openreview.net/forum?id=PqvMRDCJT9t) では、正規分布によるガウス確率経路$p_t(x) = \mathcal{N}(x | u_t, \sigma_t^2)$を考えています。それは、積分写像が$\phi_t(x) = \mu_t + \sigma_t x$を満たすとき、ベクトル場は、以下のようになるとしています。
+Flow Matchingは、ニューラルネットワーク$v_{\theta}(t, x)$が、時間依存のベクトル場$u_t(x)$に回帰するような損失を持ち、以下のようになります。
+
+$L_{FM}(\theta) = \rm{E}_{t\sim \mathcal{U}(0,1), x\sim p_t(x)} || v_{\theta}(t, x) - u_t(x)||^2$
+
+[Flow Matching for Generative Modeling](https://openreview.net/forum?id=PqvMRDCJT9t) では、正規分布によるガウス確率経路$p_t(x) = \mathcal{N}(x | u_t, \sigma_t^2)$を考え、ベクトル場は、以下のようになるとしています。
 
 $u_t(x) = \frac{\sigma_t^{\prime}}{\sigma_t} (x - \mu_t) + \mu_t^{\prime}$
+
+$\ast^{{\prime}}$は、微分を行っています。
 
 Flow Matchingにより、このベクトル場を回帰するように$v_{\theta}(t, x)$を学習することで、CNFの学習を安定して行えるようになりました。
 
@@ -167,12 +172,12 @@ Flow matchingは、ガウス確率経路を仮定していました。そこで�
 
 $p_t(x) = \int p_t(x|z)q(z)dz$
 
-もし、初期条件分布$p_0 (x|z)$からベクトル場$u_t(x|z)$によって確率経路$p_t(x|z)$が生成されるとすると、周辺ベクトル場$u_t(x)$は、
+ベクトル場$u_t(x|z)$により初期条件分布$p_0 (x|z)$から確率経路$p_t(x|z)$が生成されるとした場合の周辺ベクトル場$u_t(x)$を、
 
 $u_t(x) := \rm{E}_{q(z)} \frac{u_t(x|z)p_t(x|z)}{p_t(x)}$
 
-となる。そして、周辺ベクトル場$u_t(x)$によって、初期条件$p_0(x)$から周辺確率経路$p_t(x)$が生成されます。
-そのため、条件付き確率経路$p_t(x|z)$とベクトル場$u_t(x|x)$から$u_t$を計算したいが、分母の$p_t(x)$の計算は積分を含み困難です。
+とします。周辺ベクトル場$u_t(x)$により、初期条件$p_0(x)$から周辺確率経路$p_t(x)$が生成されます。
+このとき、条件付き確率経路$p_t(x|z)$とベクトル場$u_t(x|x)$から$u_t$を計算したいのですが、分母の$p_t(x)$の計算は積分を含み困難です。
 
 そこで、CFMの損失を
 
@@ -180,12 +185,12 @@ $\rm{L}_{CFM}(\theta) = \rm{E}_{t, q(z), p_t(x|z)} ||v_{\theta}(t, x) - u_t(x|z)
 
 としたとき、特定の条件下で、
 
-$\nabla \rm{L}_{CFM}(\theta) = \rm{L}_{FM}(\theta)$
+$\nabla \rm{L}_{CFM}(\theta) = \nabla \rm{L}_{FM}(\theta)$
 
 であることが論文で示されました。
 つまり、条件付きベクトル場$u_t(x|z)$を計算できるなら、周辺ベクトル$u_t(x)$に回帰するニューラルネット$v_{\theta}$を学習できることを示しました。
 
-これをCNFとし、以下のアルゴリズム(論文中 Algorithm 1)で計算されます。
+これをConditional Flow Matching(CFM)とし、以下のアルゴリズム(論文中 Algorithm 1)で計算されます。
 
 ![](https://storage.googleapis.com/zenn-user-upload/eebf91be8324-20231207.png)
 
@@ -195,18 +200,17 @@ $\nabla \rm{L}_{CFM}(\theta) = \rm{L}_{FM}(\theta)$
 
 # Flow Matching from a Gauusian
 
-[Flow Matching for Generative Modeling](https://openreview.net/forum?id=PqvMRDCJT9t) で説明されたFlow MatchingをCFMの特殊なケースとしての解釈を説明します。
-この論文では、$z = x_1$とし、標準正規分布$p_0(x|z) = \mathcal{N}(x; 0, 1)$から、$p_1(x|z) = \mathcal{N}(x; x_1, \sigma^2)$への確率経路と設定しています。
+[Flow Matching for Generative Modeling](https://openreview.net/forum?id=PqvMRDCJT9t) で説明されたFlow MatchingをCFMの特殊なケースとして解釈した場合について説明します。
 
-つまり、確率経路は、
+この論文では、$z = x_1$とし、標準正規分布$p_0(x|z) = \mathcal{N}(x; 0, 1)$から、$p_1(x|z) = \mathcal{N}(x; x_1, \sigma^2)$への確率経路を設定しています。つまり、確率経路は、
 
 $p_t(x|z) = \mathcal{N}(x | tx_1, (t \sigma - t + 1)^2)$
 
-となり、ベクトル場は、
+となります。$t=0$の場合と、$t=1$の場合を考えれば、時刻を0から1に変化した場合の変化が想像できると思います。この、確率経路より、ベクトル場は、
 
 $u_t(x|z) = \frac{x_1 - (1-\sigma)x}{1 - (1 - \sigma)t}$
 
-となります。
+となります。実は、このベクトル場は、確率経路の平均と分散を上記FMの説に記載したベクトル場の式に当てはめると計算できます！
 
 下図は、論文中のFigure 1で、Flow Matchingのイメージです。ガウス分布がデータサンプルへ分散を小さくしながら遷移している確率経路が見えますね。
 
@@ -215,8 +219,8 @@ $u_t(x|z) = \frac{x_1 - (1-\sigma)x}{1 - (1 - \sigma)t}$
 
 # Independet CFM
 
-CFMの基本形として、潜在変数$z$を、初期点$x_0$と、目標点$x_1$で同定し、$q(z) = q(x_0)q(x_1)$としたI-CFMを説明します。
-$x_0$と$x_1$の間の確率経路をガウス分布の移動と考えると、以下の確率経路になります。
+CFMの基本形として、初期点$x_0$と目標点$x_1$から潜在変数$z$を同定するとし、潜在分布$q(z)$を$q(z) = q(x_0)q(x_1)$としたI-CFMを説明します。
+何を言いたいかというと、$x_1$だけでなく、$x_0$も用いた、確率経路を設定しています。$x_0$と$x_1$の間の確率経路をガウス分布の移動と考えると、以下の確率経路になります。
 
 $p_t(x|z) = \mathcal{N}(x | tx_1 + (1 - t) x_0, \sigma^2)$
 
@@ -226,7 +230,7 @@ $u_t(x|z) =  x1 - x0$
 
 となります。かなりシンプルな形式になっていますが、これにより$p_t(x|z)$は効率的にサンプリングでき、$u_t$は効率的に計算できるため、$\rm{L}_{CFM}$の勾配計算も効率的とのことです。
 
-下図は、論文中のFigure 1で、I-CFMのイメージです。固定の分散の分布が移動している事がわかります。これを見ると、拡散モデルと異なり、分布間の移動を行っているような気がしますね。そもそも、拡散モデルのようにノイズからノイズ除去で生成するより、特定の分布から生成したほうが効率良い気がします。どなんでしょうか...
+下図は、論文中のFigure 1で、I-CFMのイメージです。固定の分散の分布が移動している事がわかります。
 
 ![](https://storage.googleapis.com/zenn-user-upload/c8b7ec11bd22-20231207.png)
 
@@ -270,7 +274,7 @@ I-CFMに対して、この修正を行ったものが、OT-CFMになります。
 
 ![](https://storage.googleapis.com/zenn-user-upload/671c2e40a4e3-20231207.png)
 
-実際、論文中の実験では、下図のようにより効率的な分布の移動ができています。下図は、moonから9つのガウス分布の生成を行っていますが、左側のI-CFMより、右側のOT-CFMが明らかにシンプルな遷移を行っています。
+実際、下図のようにmoonから9つのガウス分布の生成を行っていますが、左側のI-CFMより、右側のOT-CFMが明らかにシンプルな遷移を行っています。
 
 ![](https://storage.googleapis.com/zenn-user-upload/7ed690f1dc10-20231207.png)
 
@@ -286,7 +290,7 @@ I-CFMに対して、この修正を行ったものが、OT-CFMになります。
 
 # Schrödinge Bridge CFM
 
-論文中には、シュレディンガーBridge(SB)によるCFMもでてきます。勝手なイメージですが、I-CFMとOT-CFMの中間に当たるイメージを持っていますが、理論が複雑で説明が難しいので省きます。ぱっとみ、SB-CFMより、OT-CFMのほうが精度が良さそうでした。ただ、[Schrodinger Bridges Beat Diffusion Models on Text-to-Speech Synthesis](https://huggingface.co/papers/2312.03491)という論文もでていたので、次回の記事を書く際にしっかり理解したいと思います。（誰か書いて！！）
+論文中には、シュレディンガーBridge(SB)によるCFMもでてきます。勝手なイメージですが、I-CFMとOT-CFMの中間に当たると思っていますが、理論が複雑で説明が、かなり長くなりそうなので省きます。ぱっとみ、SB-CFMより、OT-CFMのほうが精度が良さそうでした。ただ、[Schrodinger Bridges Beat Diffusion Models on Text-to-Speech Synthesis](https://huggingface.co/papers/2312.03491)という論文もでていたので、次回の記事を書く際にしっかり理解したいと思います。（誰か書いてください！！）
 
 ちなみにですが、Schrödinge Bridgeに関しては、以下の記事がとても参考になりました。すごく良い記事です！
 
@@ -310,7 +314,7 @@ I-CFMに対して、この修正を行ったものが、OT-CFMになります。
 
 まずは、CFMを使用している音声合成モデルである[Matcha-TTS](https://github.com/shivammehta25/Matcha-TTS/blob/main/matcha/models/components/flow_matching.py)です。ここでは、$x_1$が目標となるデータで、エンコーダの出力であるメルスペクトログラム$mu$をflow matchingでいい感じに変換し$x_1$に近づけるため、$mu$という引数があります。
 
-実装を見ると、ランダムな$z$をサンプリングしていますが、I-CFNという認識でよいのでしょうか。（ただ、[他のCFMの実装](https://github.com/atong01/conditional-flow-matching/blob/21cd0c888186f6e2b76deb393800361b8a850e9b/examples/cifar10/train_cifar10.py#L147C13-L147C13)の初期値も同様になっていました。）また、気になる点としては、確率経路の平均を計算する部分と、ベクトル場を計算する部分に、`sigma_min`が入っています。ただ、この値は、かなり小さい($1e^{-4}$)とかなので、無視しても良いかもしれませんが、実装上必要なのでしょうかね...　([他の実装](https://github.com/atong01/conditional-flow-matching/blob/main/runner/configs/model/otcfm.yaml)では、$0.1$など割りと大きめの値が設定されている場合がありました。)
+実装を見ると、概ねアルゴリズム通りですが、ランダムな$z$をサンプリングしておりI-CFNを実装しているという認識でよいのでしょうか。（ただ、[他のCFMの実装](https://github.com/atong01/conditional-flow-matching/blob/21cd0c888186f6e2b76deb393800361b8a850e9b/examples/cifar10/train_cifar10.py#L147C13-L147C13)の初期値も同様になっていました。）また、気になる点としては、確率経路の平均を計算する部分と、ベクトル場を計算する部分に、`sigma_min`が入っています。ただ、この値は、かなり小さい($1e^{-4}$)とかなので、無視しても良いかもしれませんが、実装上必要なのでしょうかね...　([他の実装](https://github.com/atong01/conditional-flow-matching/blob/main/runner/configs/model/otcfm.yaml)では、$0.1$など割りと大きめの値が設定されている場合がありました。)
 
 また、確率経路から、データ$x$をサンプルしていたはずですが、ここでは計算せず、直接ニューラルネットワークに入力しています。こちらも実装ならではなのかなという気がします。
 
