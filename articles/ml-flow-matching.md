@@ -51,7 +51,7 @@ $dx = [ f(x, t) - g^2(t) \nabla_x \rm{log} p_t (x) ] dt + g(t) d \bar{w}$
 
 時刻$t$のスコア$\nabla_x \rm{log} p_t (x)$が、わかりさえすれば、事前分布$p_T(x)$から、データ分布$p_0(x)$への変換経路を求めることができます。
 
-### 例えば、Denoising Diffusion Probabilistic Model (DDPM)の場合、以下のようなSDEになります。
+### Denoising Diffusion Probabilistic Model (DDPM)の場合
 
 元のDDPMの式は、以下です。
 
