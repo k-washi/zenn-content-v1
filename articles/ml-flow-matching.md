@@ -316,7 +316,7 @@ I-CFMに対して、この修正を行ったものが、OT-CFMになります。
 
 まずは、CFMを使用している音声合成モデルである[Matcha-TTS](https://github.com/shivammehta25/Matcha-TTS/blob/main/matcha/models/components/flow_matching.py)です。ここでは、$x_1$が目標となるデータで、エンコーダの出力であるメルスペクトログラム$mu$をflow matchingでいい感じに変換し$x_1$に近づけるため、$mu$という引数があります。
 
-実装を見ると、概ねアルゴリズム通りですが、ランダムな$z$をサンプリングしておりI-CFNを実装しているという認識でよいのでしょうか。例えば、CFNは、分布の変換なので、入力のメルスペクトログラムの分布を正解のメルスペクトログラムの分布へ近づけるように実装しても良さそうな気がします。どうなんでしょうか？（ただ、[他のCFMの実装](https://github.com/atong01/conditional-flow-matching/blob/21cd0c888186f6e2b76deb393800361b8a850e9b/examples/cifar10/train_cifar10.py#L147C13-L147C13)の初期値も同様になっていました。）また、気になる点としては、確率経路の平均を計算する部分と、ベクトル場を計算する部分に、`sigma_min`が入っています。ただ、この値は、かなり小さい($1e^{-4}$)とかなので、無視しても良いかもしれませんが、実装上必要なのでしょうかね...　([他の実装](https://github.com/atong01/conditional-flow-matching/blob/main/runner/configs/model/otcfm.yaml)では、$0.1$など割りと大きめの値が設定されている場合がありました。)
+実装を見ると、概ねアルゴリズム通りですが、ランダムな$z$をサンプリングしておりI-CFNを実装しているという認識でよいのでしょうか。例えば、CNFは、分布の変換なので、入力のメルスペクトログラムの分布を正解のメルスペクトログラムの分布へ近づけるように実装しても良さそうな気がします。どうなんでしょうか？（ただ、[他のCFMの実装](https://github.com/atong01/conditional-flow-matching/blob/21cd0c888186f6e2b76deb393800361b8a850e9b/examples/cifar10/train_cifar10.py#L147C13-L147C13)の初期値も同様になっていました。）また、気になる点としては、確率経路の平均を計算する部分と、ベクトル場を計算する部分に、`sigma_min`が入っています。ただ、この値は、かなり小さい($1e^{-4}$)とかなので、無視しても良いかもしれませんが、実装上必要なのでしょうかね...　([他の実装](https://github.com/atong01/conditional-flow-matching/blob/main/runner/configs/model/otcfm.yaml)では、$0.1$など割りと大きめの値が設定されている場合がありました。)
 
 また、確率経路から、データ$x$をサンプルしていたはずですが、ここでは計算せず、直接ニューラルネットワークに入力しています。こちらも実装ならではなのかなという気がします。
 
