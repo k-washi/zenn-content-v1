@@ -57,7 +57,7 @@ AutoMOSは、[SpeechMos](https://github.com/tarepan/SpeechMOS)ライブラリの
 | MS-iSTFT-VITS | 28.17M | 3.881 | 0.91229 | 0.01032783 | 0.05252593 | ms-istft-vits + wavlmloss adv Loss + ConvNext like |
 | MS-iSTFT-ET2 | 26.65M | **3.95708** | **0.91951** | **0.00774977** | **0.04336844** | efficenttts2 + wavlmloss adv Loss + ConvNext like |
 
-EfficientTTS2のボコーダをMS-iSTFT(ConvNext)に変更することで、wavlmlossとadversarial lossを追加した結果、AutoMos, SpeechBertScoreともに改善されました。
+EfficnetTTS2(ET2)のボコーダをMS-iSTFT(ConvNext)に変更することで、wavlmlossとadversarial lossを追加した結果、AutoMos, SpeechBertScoreともに改善されました。
 特に、EffcientTTS2ベースにすると、SpeechBertScoreが明らかに改善されました。
 
 VITS2の工夫も導入使用しようとしましたが、durationに関するadversarial loss関連がうまく実装できていない気がしました...(性能も1話者での評価では、そんなに変わらなかったので、今回は見送りました。)  
