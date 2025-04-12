@@ -61,7 +61,7 @@ EfficnetTTS2(ET2)のボコーダをMS-iSTFT(ConvNext)に変更することで、
 特に、EffcientTTS2ベースにすると、SpeechBertScoreが明らかに改善されました。
 
 VITS2の工夫も導入使用しようとしましたが、durationに関するadversarial loss関連がうまく実装できていない気がしました...(性能も1話者での評価では、そんなに変わらなかったので、今回は見送りました。)  
-FlyTTSは、最終的なAutoMosがあまり良くなかったです。
+FlyTTSは、最終的なAutoMOSがあまり良くなかったです。
 
 次に、torch.compileを使用した場合の速度改善の結果です。
 
