@@ -35,6 +35,7 @@ VITSモデルのアーキテクチャの変更と、`torch.compile`を使用す�
 
 本記事では、JSUT BASIC5000_0001~4500で、訓練を行い、JSUT BASIC5000_4501~5000で、評価で評価を行いました。
 速度測定は、JSUT BASIC5000_4501~4600で行い、後半の50サンプルでReal Time Factor (RTF)を計算しました。
+サンプルレートは、22050Hzです。
 
 実験環境は以下の通りです。
 GPU: NVIDIA GeForce RTX 3090
